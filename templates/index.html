@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Dori‑darmon boshqaruv tizimi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden {
+            display: none;
+        }
+        .medicine-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+        .patient-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Kirish sahifasi -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+            <div class="text-center mb-8">
+                <img src="https://placehold.co/150x150" alt="Dorixona logosi — yashil xoch va dori idishi" class="mx-auto mb-4 rounded-full">
+                <h1 class="text-2xl font-bold text-gray-800">Dori‑darmon boshqaruv tizimi</h1>
+                <p class="text-gray-600">Davom etish uchun tizimga kiring</p>
+            </div>
+            
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 mb-2">Foydalanuvchi nomi</label>
+                <input type="text" id="username" placeholder="Foydalanuvchi nomingizni kiriting" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 mb-2">Parol</label>
+                <input type="password" id="password" placeholder="Parolingizni kiriting" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            
+            <div class="mb-4">
+                <label for="role" class="block text-gray-700 mb-2">Rolni tanlang</label>
+                <select id="role" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <option value="admin">Admin (to‘liq ruxsat)</option>
+                    <option value="pharmacist">Dorixona xodimi</option>
+                    <option value="doctor">Shifokor</option>
+                </select>
+            </div>
+            
+            <button id="login-btn" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition duration-300">Kirish</button>
+        </div>
+    </div>
+
+    <!-- Admin paneli -->
+    <div id="admin-dashboard" class="hidden min-h-screen">
+        <nav class="bg-green-800 text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="https://placehold.co/40x40" alt="Dorixona logosi" class="mr-2">
+                    <span class="font-bold text-xl">Admin paneli</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="admin-username-display" class="font-medium"></span>
+                    <button id="admin-logout" class="bg-red-500 px-4 py-1 rounded hover:bg-red-600">Chiqish</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mx-auto p-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Dorilar bilan ishlash</h3>
+                    <button id="admin-add-medicine" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mb-2">Yangi dori qo‘shish</button>
+                    <button id="admin-view-medicines" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Dorilar ro‘yxatini ko‘rish</button>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Statistika</h3>
+                    <button id="admin-view-statistics" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 mb-2">Dori statistikasi</button>
+                    <button id="admin-view-transactions" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Bitimlar tarixi</button>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Foydalanuvchilarni kuzatish</h3>
+                    <button id="admin-view-pharmacists" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">Dorixona xodimlari</button>
+                    <button id="admin-view-doctors" class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700">Shifokorlar</button>
+                </div>
+            </div>
+
+            <!-- Dorilar ro‘yxati -->
+            <div id="admin-medicine-list" class="hidden bg-white p-6 rounded-lg shadow mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Dori ombori</h2>
+                    <div class="relative">
+                        <input type="text" id="admin-medicine-search" placeholder="Dorilarni qidirish..." class="pl-10 pr-4 py-2 border rounded-lg">
+                        <i class="absolute left-3 top-3 text-gray-400">🔍</i>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border rounded-lg">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-3 px-4 text-left">ID</th>
+                                <th class="py-3 px-4 text-left">Nomi</th>
+                                <th class="py-3 px-4 text-left">Partiya</th>
+                                <th class="py-3 px-4 text-left">Keltirilgan</th>
+                                <th class="py-3 px-4 text-left">Ishlatilgan</th>
+                                <th class="py-3 px-4 text-left">Qolgan</th>
+                                <th class="py-3 px-4 text-left">Narxi</th>
+                                <th class="py-3 px-4 text-left">Amallar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-medicine-table-body">
+                            <!-- JS orqali to‘planadi -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Yangi dori qo‘shish formasi -->
+            <div id="admin-add-medicine-form" class="hidden bg-white p-6 rounded-lg shadow mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Yangi dori qo‘shish</h2>
+                <form id="medicine-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="medicine-name" class="block text-gray-700 mb-2">Dori nomi</label>
+                        <input type="text" id="medicine-name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label for="medicine-batch" class="block text-gray-700 mb-2">Partiya raqami</label>
+                        <input type="text" id="medicine-batch" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label for="quantity" class="block text-gray-700 mb-2">Keltirilgan miqdor</label>
+                        <input type="number" id="quantity" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label for="price" class="block text-gray-700 mb-2">Bitta narxi</label>
+                        <input type="number" step="0.01" id="price" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div class="md:col-span-2 flex justify-end space-x-4">
+                        <button type="button" id="cancel-add-medicine" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Bekor qilish</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Dori qo‘shish</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Statistika bo‘limi -->
+            <div id="admin-statistics-section" class="hidden bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Dori Statistikasi</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-blue-800 mb-2">Jami dorilar</h3>
+                        <p class="text-3xl font-bold text-blue-600" id="total-medicines">0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-green-800 mb-2">Ombordagi umumiy qiymat</h3>
+                        <p class="text-3xl font-bold text-green-600" id="total-value">0 $</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-purple-800 mb-2">Kam qolgan dorilar</h3>
+                        <p class="text-3xl font-bold text-purple-600" id="low-stock">0</p>
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <canvas id="medicine-chart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Foydalanuvchilarni kuzatish -->
+            <div id="admin-user-monitoring" class="hidden bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Foydalanuvchilarni kuzatish</h2>
+                    <div class="flex space-x-4">
+                        <button id="view-pharmacists-btn" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">Dorixona xodimlari</button>
+                        <button id="view-doctors-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Shifokorlar</button>
+                    </div>
+                </div>
+
+                <div id="pharmacists-list" class="hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Dorixona xodimi faolligi</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border rounded-lg">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="py-3 px-4 text-left">Foydalanuvchi</th>
+                                    <th class="py-3 px-4 text-left">So‘nggi kirish</th>
+                                    <th class="py-3 px-4 text-left">Bugun berilgan dorilar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pharmacist-table-body">
+                                <!-- JS orqali to‘planadi -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="doctors-list" class="hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Shifokor faolligi</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border rounded-lg">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="py-3 px-4 text-left">Foydalanuvchi</th>
+                                    <th class="py-3 px-4 text-left">So‘nggi kirish</th>
+                                    <th class="py-3 px-4 text-left">Bugun davolangan bemorlar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doctor-table-body">
+                                <!-- JS orqali to‘planadi -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dorixona xodimi paneli -->
+    <div id="pharmacist-dashboard" class="hidden min-h-screen">
+        <nav class="bg-blue-800 text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="https://placehold.co/40x40" alt="Dorixona logosi" class="mr-2">
+                    <span class="font-bold text-xl">Dorixona xodimi paneli</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="pharmacist-username-display" class="font-medium"></span>
+                    <button id="pharmacist-logout" class="bg-red-500 px-4 py-1 rounded hover:bg-red-600">Chiqish</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mx-auto p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Dorilar bilan ishlash</h3>
+                    <button id="pharmacist-view-medicines" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 mb-2">Dorilarni ko‘rish</button>
+                    <button id="pharmacist-give-medicine" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Bemorga dori berish</button>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Kundalik hisobot</h3>
+                    <button id="pharmacist-daily-records" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 mb-2">Bugungi tarqatish</button>
+                    <button id="pharmacist-view-patients" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Bemorlarni ko‘rish</button>
+                </div>
+            </div>
+
+            <!-- Dorilar ro‘yxati -->
+            <div id="pharmacist-medicine-list" class="hidden bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Mavjud dorilar</h2>
+                    <div class="relative">
+                        <input type="text" id="pharmacist-medicine-search" placeholder="Dorilarni qidirish..." class="pl-10 pr-4 py-2 border rounded-lg">
+                        <i class="absolute left-3 top-3 text-gray-400">🔍</i>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border rounded-lg">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-3 px-4 text-left">Nomi</th>
+                                <th class="py-3 px-4 text-left">Partiya</th>
+                                <th class="py-3 px-4 text-left">Mavjud</th>
+                                <th class="py-3 px-4 text-left">Narxi</th>
+                                <th class="py-3 px-4 text-left">Amallar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pharmacist-medicine-table-body">
+                            <!-- JS orqali to‘planadi -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Bemorga dori berish formasi -->
+            <div id="pharmacist-give-medicine-form" class="hidden bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Bemorga dori berish</h2>
+                <form id="give-medicine-form" class="space-y-6">
+                    <div>
+                        <label for="selected-patient" class="block text-gray-700 mb-2">Bemorni tanlang</label>
+                        <select id="selected-patient" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <!-- JS orqali to‘planadi -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="selected-medicine" class="block text-gray-700 mb-2">Dorini tanlang</label>
+                        <select id="selected-medicine" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <!-- JS orqali to‘planadi -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="quantity-to-give" class="block text-gray-700 mb-2">Miqdor</label>
+                        <input type="number" id="quantity-to-give" min="1" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" id="cancel-give-medicine" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Bekor qilish</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Dori berish</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bugungi dori tarqatish hisobot -->
+            <div id="pharmacist-daily-records-section" class="hidden bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Bugungi dori tarqatish</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border rounded-lg">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-3 px-4 text-left">Bemor</th>
+                                <th class="py-3 px-4 text-left">Dori</th>
+                                <th class="py-3 px-4 text-left">Miqdor</th>
+                                <th class="py-3 px-4 text-left">Vaqti</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pharmacist-distribution-table-body">
+                            <!-- JS orqali to‘planadi -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shifokor paneli -->
+    <div id="doctor-dashboard" class="hidden min-h-screen">
+        <nav class="bg-indigo-800 text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="https://placehold.co/40x40" alt="Tibbiyot logosi" class="mr-2">
+                    <span class="font-bold text-xl">Shifokor paneli</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="doctor-username-display" class="font-medium"></span>
+                    <button id="doctor-logout" class="bg-red-500 px-4 py-1 rounded hover:bg-red-600">Chiqish</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mx-auto p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Dori haqida ma'lumot</h3>
+                    <button id="doctor-view-medicines" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 mb-2">Mavjud dorilarni ko‘rish</button>
+                    <button id="doctor-prescribe-medicine" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700">Dori tayinlash</button>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Bemorlar bilan ishlash</h3>
+                    <button id="doctor-view-patients" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mb-2">Bemorlarni ko‘rish</button>
+                    <button id="doctor-add-patient" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Yangi bemor qo‘shish</button>
+                </div>
+            </div>
+
+            <!-- Mavjud dorilar ro‘yxati -->
+            <div id="doctor-medicine-list" class="hidden bg-white p-6 rounded-lg shadow mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Mavjud dorilar</h2>
+                    <div class="relative">
+                        <input type="text" id="doctor-medicine-search" placeholder="Dorilarni qidirish..." class="pl-10 pr-4 py-2 border rounded-lg">
+                        <i class="absolute left-3 top-3 text-gray-400">🔍</i>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border rounded-lg">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-3 px-4 text-left">Nomi</th>
+                                <th class="py-3 px-4 text-left">Partiya</th>
+                                <th class="py-3 px-4 text-left">Mavjud</th>
+                                <th class="py-3 px-4 text-left">Narxi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctor-medicine-table-body">
+                            <!-- JS orqali to‘planadi -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Dori tayinlash formasi -->
+            <div id="doctor-prescribe-medicine-form" class="hidden bg-white p-6 rounded-lg shadow mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Dori tayinlash</h2>
+                <form id="prescribe-medicine-form" class="space-y-6">
+                    <div>
+                        <label for="doctor-selected-patient" class="block text-gray-700 mb-2">Bemorni tanlang</label>
+                        <select id="doctor-selected-patient" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- JS orqali to‘planadi -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="doctor-selected-medicine" class="block text-gray-700 mb-2">Dorini tanlang</label>
+                        <select id="doctor-selected-medicine" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- JS orqali to‘planadi -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="quantity-to-prescribe" class="block text-gray-700 mb-2">Miqdor</label>
+                        <input type="number" id="quantity-to-prescribe" min="1" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="prescription-notes" class="block text-gray-700 mb-2">Izohlar</label>
+                        <textarea id="prescription-notes" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" id="cancel-prescribe-medicine" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Bekor qilish</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Dori tayinlash</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bemorlar ro'yxati bo'limi -->
+            <div id="doctor-patient-list" class="hidden bg-white p-6 rounded-lg shadow mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Bemorlar ro'yxati</h2>
+                    <div class="relative">
+                        <input type="text" id="doctor-patient-search" placeholder="Bemorlarni qidirish..." class="pl-10 pr-4 py-2 border rounded-lg">
+                        <i class="absolute left-3 top-3 text-gray-400">🔍</i>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border rounded-lg">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-3 px-4 text-left">ID</th>
+                                <th class="py-3 px-4 text-left">Ismi</th>
+                                <th class="py-3 px-4 text-left">Aloqa</th>
+                                <th class="py-3 px-4 text-left">Amallar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctor-patient-table-body">
+                            <!-- JS orqali bemorlar shu yerga qo‘shiladi -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Yangi bemor qo'shish formasi -->
+            <div id="doctor-add-patient-form" class="hidden bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Yangi bemor qo'shish</h2>
+                <form id="patient-form" class="space-y-6">
+                    <div>
+                        <label for="patient-name" class="block text-gray-700 mb-2">To‘liq ismi</label>
+                        <input type="text" id="patient-name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="patient-contact" class="block text-gray-700 mb-2">Telefon raqami</label>
+                        <input type="text" id="patient-contact" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="patient-age" class="block text-gray-700 mb-2">Yoshi</label>
+                        <input type="number" id="patient-age" min="0" max="120" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="patient-gender" class="block text-gray-700 mb-2">Jinsi</label>
+                        <select id="patient-gender" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="male">Erkak</option>
+                            <option value="female">Ayol</option>
+                            <option value="other">Boshqa</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" id="cancel-add-patient" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Bekor qilish</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Qo‘shish</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock database
+        const db = {
+            users: {
+                admin1: { username: 'admin1', password: 'admin123', role: 'admin' },
+                pharma1: { username: 'pharma1', password: 'pharma123', role: 'pharmacist' },
+                doctor1: { username: 'doctor1', password: 'doctor123', role: 'doctor' }
+            },
+            medicines: [
+                { id: 1, name: 'Paracetamol', batch: 'BAT2023-001', received: 500, used: 120, remaining: 380, price: 2.5, addedDate: '2023-01-15' },
+                { id: 2, name: 'Ibuprofen', batch: 'BAT2023-002', received: 300, used: 85, remaining: 215, price: 3.2, addedDate: '2023-02-20' },
+                { id: 3, name: 'Amoxicillin', batch: 'BAT2023-003', received: 250, used: 90, remaining: 160, price: 5.0, addedDate: '2023-03-10' },
+                { id: 4, name: 'Cetirizine', batch: 'BAT2023-004', received: 400, used: 150, remaining: 250, price: 1.8, addedDate: '2023-04-05' },
+                { id: 5, name: 'Omeprazole', batch: 'BAT2023-005', received: 350, used: 110, remaining: 240, price: 4.5, addedDate: '2023-05-12' }
+            ],
+            patients: [
+                { id: 1, name: 'John Doe', contact: '+1234567890', age: 35, gender: 'male', registeredDate: '2023-01-20' },
+                { id: 2, name: 'Jane Smith', contact: '+9876543210', age: 28, gender: 'female', registeredDate: '2023-02-15' },
+                { id: 3, name: 'Robert Johnson', contact: '+1122334455', age: 42, gender: 'male', registeredDate: '2023-03-10' },
+                { id: 4, name: 'Emily Davis', contact: '+5566778899', age: 31, gender: 'female', registeredDate: '2023-04-25' }
+            ],
+            transactions: [
+                { id: 1, medicineId: 1, patientId: 2, quantity: 5, date: '2023-06-01', time: '10:15', type: 'prescription', doctor: 'doctor1' },
+                { id: 2, medicineId: 2, patientId: 1, quantity: 10, date: '2023-06-01', time: '11:30', type: 'direct', pharmacist: 'pharma1' },
+                { id: 3, medicineId: 3, patientId: 3, quantity: 7, date: '2023-06-02', time: '09:45', type: 'prescription', doctor: 'doctor1' },
+                { id: 4, medicineId: 4, patientId: 4, quantity: 3, date: '2023-06-02', time: '14:20', type: 'direct', pharmacist: 'pharma1' }
+            ],
+            prescriptions: [
+                { id: 1, medicineId: 1, patientId: 2, quantity: 5, date: '2023-06-01', doctor: 'doctor1', notes: 'For fever and mild pain' },
+                { id: 2, medicineId: 3, patientId: 3, quantity: 7, date: '2023-06-02', doctor: 'doctor1', notes: 'Antibiotic course for 7 days' }
+            ],
+            pharmacistRecords: [
+                { username: 'pharma1', lastLogin: '2023-06-02 14:25', medicinesGivenToday: 2 },
+                { username: 'pharma2', lastLogin: '2023-06-01 11:45', medicinesGivenToday: 1 }
+            ],
+            doctorRecords: [
+                { username: 'doctor1', lastLogin: '2023-06-02 09:30', patientsTreatedToday: 2 },
+                { username: 'doctor2', lastLogin: '2023-06-01 16:20', patientsTreatedToday: 1 }
+            ]
+        };
+
+        // DOM Elements
+        const loginPage = document.getElementById('login-page');
+        const adminDashboard = document.getElementById('admin-dashboard');
+        const pharmacistDashboard = document.getElementById('pharmacist-dashboard');
+        const doctorDashboard = document.getElementById('doctor-dashboard');
+
+        // Login functionality
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            // Simple validation
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+
+            // Mock authentication
+            if (db.users[username] && db.users[username].password === password && db.users[username].role === role) {
+                loginPage.classList.add('hidden');
+                
+                // Display username in dashboard
+                if (role === 'admin') {
+                    adminDashboard.classList.remove('hidden');
+                    document.getElementById('admin-username-display').textContent = username;
+                } else if (role === 'pharmacist') {
+                    pharmacistDashboard.classList.remove('hidden');
+                    document.getElementById('pharmacist-username-display').textContent = username;
+                } else if (role === 'doctor') {
+                    doctorDashboard.classList.remove('hidden');
+                    document.getElementById('doctor-username-display').textContent = username;
+                }
+            } else {
+                alert('Invalid credentials or role mismatch');
+            }
+        });
+
+        // Admin Dashboard Functionality
+        document.getElementById('admin-add-medicine').addEventListener('click', () => {
+            document.getElementById('admin-medicine-list').classList.add('hidden');
+            document.getElementById('admin-statistics-section').classList.add('hidden');
+            document.getElementById('admin-user-monitoring').classList.add('hidden');
+            document.getElementById('admin-add-medicine-form').classList.remove('hidden');
+        });
+
+        document.getElementById('admin-view-medicines').addEventListener('click', () => {
+            document.getElementById('admin-add-medicine-form').classList.add('hidden');
+            document.getElementById('admin-statistics-section').classList.add('hidden');
+            document.getElementById('admin-user-monitoring').classList.add('hidden');
+            
+            const medicineList = document.getElementById('admin-medicine-list');
+            medicineList.classList.remove('hidden');
+            updateAdminMedicineTable();
+        });
+
+        document.getElementById('admin-view-statistics').addEventListener('click', () => {
+            document.getElementById('admin-add-medicine-form').classList.add('hidden');
+            document.getElementById('admin-medicine-list').classList.add('hidden');
+            document.getElementById('admin-user-monitoring').classList.add('hidden');
+            
+            const statsSection = document.getElementById('admin-statistics-section');
+            statsSection.classList.remove('hidden');
+            updateAdminStatistics();
+        });
+
+        document.getElementById('admin-view-transactions').addEventListener('click', () => {
+            alert('Transaction history would be displayed here.');
+        });
+
+        document.getElementById('admin-view-pharmacists').addEventListener('click', () => {
+            document.getElementById('admin-add-medicine-form').classList.add('hidden');
+            document.getElementById('admin-medicine-list').classList.add('hidden');
+            document.getElementById('admin-statistics-section').classList.add('hidden');
+            
+            document.getElementById('admin-user-monitoring').classList.remove('hidden');
+            document.getElementById('pharmacists-list').classList.remove('hidden');
+            document.getElementById('doctors-list').classList.add('hidden');
+            updateAdminPharmacistTable();
+        });
+
+        document.getElementById('admin-view-doctors').addEventListener('click', () => {
+            document.getElementById('admin-add-medicine-form').classList.add('hidden');
+            document.getElementById('admin-medicine-list').classList.add('hidden');
+            document.getElementById('admin-statistics-section').classList.add('hidden');
+            
+            document.getElementById('admin-user-monitoring').classList.remove('hidden');
+            document.getElementById('pharmacists-list').classList.add('hidden');
+            document.getElementById('doctors-list').classList.remove('hidden');
+            updateAdminDoctorTable();
+        });
+
+        document.getElementById('admin-logout').addEventListener('click', () => {
+            adminDashboard.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            resetForms();
+        });
+
+        // Admin Medicine Table Functions
+        function updateAdminMedicineTable(filter = '') {
+            const tableBody = document.getElementById('admin-medicine-table-body');
+            tableBody.innerHTML = '';
+            
+            const filteredMedicines = db.medicines.filter(medicine => 
+                medicine.name.toLowerCase().includes(filter.toLowerCase()) ||
+                medicine.batch.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            filteredMedicines.forEach(medicine => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${medicine.id}</td>
+                    <td class="py-3 px-4">${medicine.name}</td>
+                    <td class="py-3 px-4">${medicine.batch}</td>
+                    <td class="py-3 px-4">${medicine.received}</td>
+                    <td class="py-3 px-4">${medicine.used}</td>
+                    <td class="py-3 px-4">${medicine.remaining}</td>
+                    <td class="py-3 px-4">$${medicine.price.toFixed(2)}</td>
+                    <td class="py-3 px-4">
+                        <button class="text-blue-600 hover:text-blue-800" onclick="editMedicine(${medicine.id})">Edit</button>
+                        <button class="text-red-600 hover:text-red-800 ml-2" onclick="deleteMedicine(${medicine.id})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        window.editMedicine = function(id) {
+            const medicine = db.medicines.find(m => m.id === id);
+            if (medicine) {
+                document.getElementById('medicine-name').value = medicine.name;
+                document.getElementById('medicine-batch').value = medicine.batch;
+                document.getElementById('quantity').value = medicine.received;
+                document.getElementById('price').value = medicine.price;
+                
+                // Change form to update mode
+                document.getElementById('medicine-form').dataset.mode = 'update';
+                document.getElementById('medicine-form').dataset.id = id;
+                
+                const submitBtn = document.querySelector('#medicine-form button[type="submit"]');
+                submitBtn.textContent = 'Update Medicine';
+            }
+        };
+
+        window.deleteMedicine = function(id) {
+            if (confirm('Are you sure you want to delete this medicine?')) {
+                db.medicines = db.medicines.filter(m => m.id !== id);
+                updateAdminMedicineTable();
+                alert('Medicine deleted successfully!');
+            }
+        };
+
+        document.getElementById('admin-medicine-search').addEventListener('input', (e) => {
+            updateAdminMedicineTable(e.target.value);
+        });
+
+        // Medicine form submission
+        document.getElementById('medicine-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const mode = form.dataset.mode || 'add';
+            const name = document.getElementById('medicine-name').value;
+            const batch = document.getElementById('medicine-batch').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const price = parseFloat(document.getElementById('price').value);
+            
+            if (!name || !batch || !quantity || !price) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            if (mode === 'add') {
+                // Add new medicine
+                const newId = db.medicines.length > 0 ? Math.max(...db.medicines.map(m => m.id)) + 1 : 1;
+                db.medicines.push({
+                    id: newId,
+                    name,
+                    batch,
+                    received: quantity,
+                    used: 0,
+                    remaining: quantity,
+                    price,
+                    addedDate: new Date().toISOString().split('T')[0]
+                });
+                
+                alert('Medicine added successfully!');
+            } else {
+                // Update existing medicine
+                const id = parseInt(form.dataset.id);
+                const medicine = db.medicines.find(m => m.id === id);
+                if (medicine) {
+                    medicine.name = name;
+                    medicine.batch = batch;
+                    
+                    // If received amount changed, update remaining
+                    const diff = quantity - medicine.received;
+                    medicine.received = quantity;
+                    medicine.remaining += diff;
+                    
+                    medicine.price = price;
+                    
+                    alert('Medicine updated successfully!');
+                }
+            }
+            
+            form.reset();
+            document.getElementById('admin-add-medicine-form').classList.add('hidden');
+            updateAdminMedicineTable();
+        });
+
+        document.getElementById('cancel-add-medicine').addEventListener('click', () => {
+            document.getElementById('medicine-form').reset();
+            document.getElementById('medicine-form').dataset.mode = '';
+            document.getElementById('medicine-form').dataset.id = '';
+            document.getElementById('admin-add-medicine-form').classList.add('hidden');
+        });
+
+        // Admin Statistics Functions
+        function updateAdminStatistics() {
+            // Update summary statistics
+            document.getElementById('total-medicines').textContent = db.medicines.length;
+            
+            const totalValue = db.medicines.reduce((sum, med) => sum + (med.remaining * med.price), 0);
+            document.getElementById('total-value').textContent = '$' + totalValue.toFixed(2);
+            
+            const lowStock = db.medicines.filter(med => med.remaining < 50).length;
+            document.getElementById('low-stock').textContent = lowStock;
+        }
+
+        // Admin User Monitoring Functions
+        function updateAdminPharmacistTable() {
+            const tableBody = document.getElementById('pharmacist-table-body');
+            tableBody.innerHTML = '';
+            
+            db.pharmacistRecords.forEach(pharmacist => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${pharmacist.username}</td>
+                    <td class="py-3 px-4">${pharmacist.lastLogin}</td>
+                    <td class="py-3 px-4">${pharmacist.medicinesGivenToday}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateAdminDoctorTable() {
+            const tableBody = document.getElementById('doctor-table-body');
+            tableBody.innerHTML = '';
+            
+            db.doctorRecords.forEach(doctor => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${doctor.username}</td>
+                    <td class="py-3 px-4">${doctor.lastLogin}</td>
+                    <td class="py-3 px-4">${doctor.patientsTreatedToday}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Pharmacist Dashboard Functionality
+        document.getElementById('pharmacist-view-medicines').addEventListener('click', () => {
+            document.getElementById('pharmacist-medicine-list').classList.remove('hidden');
+            document.getElementById('pharmacist-give-medicine-form').classList.add('hidden');
+            document.getElementById('pharmacist-daily-records-section').classList.add('hidden');
+            
+            updatePharmacistMedicineTable();
+        });
+
+        document.getElementById('pharmacist-give-medicine').addEventListener('click', () => {
+            document.getElementById('pharmacist-medicine-list').classList.add('hidden');
+            document.getElementById('pharmacist-give-medicine-form').classList.remove('hidden');
+            document.getElementById('pharmacist-daily-records-section').classList.add('hidden');
+            
+            // Populate patient and medicine dropdowns
+            updatePharmacistPatientDropdown();
+            updatePharmacistMedicineDropdown();
+        });
+
+        document.getElementById('pharmacist-daily-records').addEventListener('click', () => {
+            document.getElementById('pharmacist-medicine-list').classList.add('hidden');
+            document.getElementById('pharmacist-give-medicine-form').classList.add('hidden');
+            document.getElementById('pharmacist-daily-records-section').classList.remove('hidden');
+            
+            updatePharmacistDailyRecords();
+        });
+
+        document.getElementById('pharmacist-view-patients').addEventListener('click', () => {
+            alert('Patient records would be displayed here.');
+        });
+
+        document.getElementById('pharmacist-logout').addEventListener('click', () => {
+            pharmacistDashboard.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            resetForms();
+        });
+
+        // Pharmacist Medicine Table Functions
+        function updatePharmacistMedicineTable(filter = '') {
+            const tableBody = document.getElementById('pharmacist-medicine-table-body');
+            tableBody.innerHTML = '';
+            
+            const filteredMedicines = db.medicines.filter(medicine => 
+                medicine.name.toLowerCase().includes(filter.toLowerCase()) ||
+                medicine.batch.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            filteredMedicines.forEach(medicine => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${medicine.name}</td>
+                    <td class="py-3 px-4">${medicine.batch}</td>
+                    <td class="py-3 px-4">${medicine.remaining}</td>
+                    <td class="py-3 px-4">$${medicine.price.toFixed(2)}</td>
+                    <td class="py-3 px-4">
+                        <button class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700" onclick="pharmacistGiveMedicine(${medicine.id})">Give</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        window.pharmacistGiveMedicine = function(id) {
+            document.getElementById('pharmacist-medicine-list').classList.add('hidden');
+            document.getElementById('pharmacist-give-medicine-form').classList.remove('hidden');
+            
+            // Populate patient and medicine dropdowns
+            updatePharmacistPatientDropdown();
+            
+            // Set selected medicine
+            document.getElementById('selected-medicine').value = id;
+        };
+
+        document.getElementById('pharmacist-medicine-search').addEventListener('input', (e) => {
+            updatePharmacistMedicineTable(e.target.value);
+        });
+
+        // Pharmacist Patient Dropdown
+        function updatePharmacistPatientDropdown() {
+            const dropdown = document.getElementById('selected-patient');
+            dropdown.innerHTML = '';
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Patient';
+            dropdown.appendChild(defaultOption);
+            
+            db.patients.forEach(patient => {
+                const option = document.createElement('option');
+                option.value = patient.id;
+                option.textContent = `${patient.name} (${patient.contact})`;
+                dropdown.appendChild(option);
+            });
+        }
+
+        // Pharmacist Medicine Dropdown
+        function updatePharmacistMedicineDropdown() {
+            const dropdown = document.getElementById('selected-medicine');
+            dropdown.innerHTML = '';
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Medicine';
+            dropdown.appendChild(defaultOption);
+            
+            db.medicines.forEach(medicine => {
+                const option = document.createElement('option');
+                option.value = medicine.id;
+                option.textContent = `${medicine.name} (${medicine.batch}) - Available: ${medicine.remaining}`;
+                dropdown.appendChild(option);
+            });
+        }
+
+        // Pharmacist Give Medicine Form
+        document.getElementById('give-medicine-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const patientId = parseInt(document.getElementById('selected-patient').value);
+            const medicineId = parseInt(document.getElementById('selected-medicine').value);
+            const quantity = parseInt(document.getElementById('quantity-to-give').value);
+            
+            if (!patientId || !medicineId || !quantity) {
+                alert('Please select patient and medicine and enter quantity');
+                return;
+            }
+            
+            const medicine = db.medicines.find(m => m.id === medicineId);
+            if (!medicine) {
+                alert('Medicine not found');
+                return;
+            }
+            
+            if (quantity > medicine.remaining) {
+                alert('Not enough stock available');
+                return;
+            }
+            
+            // Update medicine stock
+            medicine.used += quantity;
+            medicine.remaining -= quantity;
+            
+            // Record transaction
+            const newId = db.transactions.length > 0 ? Math.max(...db.transactions.map(t => t.id)) + 1 : 1;
+            const now = new Date();
+            db.transactions.push({
+                id: newId,
+                medicineId,
+                patientId,
+                quantity,
+                date: now.toISOString().split('T')[0],
+                time: now.toTimeString().split(' ')[0].substring(0, 5),
+                type: 'direct',
+                pharmacist: document.getElementById('pharmacist-username-display').textContent
+            });
+            
+            alert(`Medicine given to patient successfully! Remaining stock: ${medicine.remaining}`);
+            
+            document.getElementById('give-medicine-form').reset();
+            document.getElementById('pharmacist-give-medicine-form').classList.add('hidden');
+            updatePharmacistMedicineTable();
+        });
+
+        document.getElementById('cancel-give-medicine').addEventListener('click', () => {
+            document.getElementById('give-medicine-form').reset();
+            document.getElementById('pharmacist-give-medicine-form').classList.add('hidden');
+        });
+
+        // Pharmacist Daily Records
+        function updatePharmacistDailyRecords() {
+            const tableBody = document.getElementById('pharmacist-distribution-table-body');
+            tableBody.innerHTML = '';
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayTransactions = db.transactions.filter(t => t.date === today && t.type === 'direct');
+            
+            todayTransactions.forEach(trans => {
+                const medicine = db.medicines.find(m => m.id === trans.medicineId);
+                const patient = db.patients.find(p => p.id === trans.patientId);
+                
+                if (medicine && patient) {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b';
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${patient.name}</td>
+                        <td class="py-3 px-4">${medicine.name}</td>
+                        <td class="py-3 px-4">${trans.quantity}</td>
+                        <td class="py-3 px-4">${trans.time}</td>
+                    `;
+                    tableBody.appendChild(row);
+                }
+            });
+        }
+
+        // Doctor Dashboard Functionality
+        document.getElementById('doctor-view-medicines').addEventListener('click', () => {
+            document.getElementById('doctor-medicine-list').classList.remove('hidden');
+            document.getElementById('doctor-prescribe-medicine-form').classList.add('hidden');
+            document.getElementById('doctor-patient-list').classList.add('hidden');
+            document.getElementById('doctor-add-patient-form').classList.add('hidden');
+            
+            updateDoctorMedicineTable();
+        });
+
+        document.getElementById('doctor-prescribe-medicine').addEventListener('click', () => {
+            document.getElementById('doctor-medicine-list').classList.add('hidden');
+            document.getElementById('doctor-prescribe-medicine-form').classList.remove('hidden');
+            document.getElementById('doctor-patient-list').classList.add('hidden');
+            document.getElementById('doctor-add-patient-form').classList.add('hidden');
+            
+            // Populate patient and medicine dropdowns
+            updateDoctorPatientDropdown();
+            updateDoctorMedicineDropdown();
+        });
+
+        document.getElementById('doctor-view-patients').addEventListener('click', () => {
+            document.getElementById('doctor-medicine-list').classList.add('hidden');
+            document.getElementById('doctor-prescribe-medicine-form').classList.add('hidden');
+            document.getElementById('doctor-patient-list').classList.remove('hidden');
+            document.getElementById('doctor-add-patient-form').classList.add('hidden');
+            
+            updateDoctorPatientTable();
+        });
+
+        document.getElementById('doctor-add-patient').addEventListener('click', () => {
+            document.getElementById('doctor-medicine-list').classList.add('hidden');
+            document.getElementById('doctor-prescribe-medicine-form').classList.add('hidden');
+            document.getElementById('doctor-patient-list').classList.add('hidden');
+            document.getElementById('doctor-add-patient-form').classList.remove('hidden');
+        });
+
+        document.getElementById('doctor-logout').addEventListener('click', () => {
+            doctorDashboard.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            resetForms();
+        });
+
+        // Doctor Medicine Table Functions
+        function updateDoctorMedicineTable(filter = '') {
+            const tableBody = document.getElementById('doctor-medicine-table-body');
+            tableBody.innerHTML = '';
+            
+            const filteredMedicines = db.medicines.filter(medicine => 
+                medicine.name.toLowerCase().includes(filter.toLowerCase()) ||
+                medicine.batch.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            filteredMedicines.forEach(medicine => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${medicine.name}</td>
+                    <td class="py-3 px-4">${medicine.batch}</td>
+                    <td class="py-3 px-4">${medicine.remaining}</td>
+                    <td class="py-3 px-4">$${medicine.price.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        document.getElementById('doctor-medicine-search').addEventListener('input', (e) => {
+            updateDoctorMedicineTable(e.target.value);
+        });
+
+        // Doctor Patient Dropdown
+        function updateDoctorPatientDropdown() {
+            const dropdown = document.getElementById('doctor-selected-patient');
+            dropdown.innerHTML = '';
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Patient';
+            dropdown.appendChild(defaultOption);
+            
+            db.patients.forEach(patient => {
+                const option = document.createElement('option');
+                option.value = patient.id;
+                option.textContent = `${patient.name} (${patient.contact})`;
+                dropdown.appendChild(option);
+            });
+        }
+
+        // Doctor Medicine Dropdown
+        function updateDoctorMedicineDropdown() {
+            const dropdown = document.getElementById('doctor-selected-medicine');
+            dropdown.innerHTML = '';
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Medicine';
+            dropdown.appendChild(defaultOption);
+            
+            db.medicines.forEach(medicine => {
+                const option = document.createElement('option');
+                option.value = medicine.id;
+                option.textContent = `${medicine.name} (${medicine.batch}) - Available: ${medicine.remaining}`;
+                dropdown.appendChild(option);
+            });
+        }
+
+        // Doctor Prescribe Medicine Form
+        document.getElementById('prescribe-medicine-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const patientId = parseInt(document.getElementById('doctor-selected-patient').value);
+            const medicineId = parseInt(document.getElementById('doctor-selected-medicine').value);
+            const quantity = parseInt(document.getElementById('quantity-to-prescribe').value);
+            const notes = document.getElementById('prescription-notes').value;
+            
+            if (!patientId || !medicineId || !quantity) {
+                alert('Please select patient and medicine and enter quantity');
+                return;
+            }
+            
+            const medicine = db.medicines.find(m => m.id === medicineId);
+            if (!medicine) {
+                alert('Medicine not found');
+                return;
+            }
+            
+            // Record prescription (don't update inventory yet - pharmacist will do that)
+            const newPrescriptionId = db.prescriptions.length > 0 ? Math.max(...db.prescriptions.map(p => p.id)) + 1 : 1;
+            const now = new Date();
+            
+            db.prescriptions.push({
+                id: newPrescriptionId,
+                medicineId,
+                patientId,
+                quantity,
+                date: now.toISOString().split('T')[0],
+                doctor: document.getElementById('doctor-username-display').textContent,
+                notes
+            });
+            
+            alert('Prescription created successfully! The pharmacist will fulfill it.');
+            
+            document.getElementById('prescribe-medicine-form').reset();
+            document.getElementById('doctor-prescribe-medicine-form').classList.add('hidden');
+        });
+
+        document.getElementById('cancel-prescribe-medicine').addEventListener('click', () => {
+            document.getElementById('prescribe-medicine-form').reset();
+            document.getElementById('doctor-prescribe-medicine-form').classList.add('hidden');
+        });
+
+        // Doctor Patient Table Functions
+        function updateDoctorPatientTable(filter = '') {
+            const tableBody = document.getElementById('doctor-patient-table-body');
+            tableBody.innerHTML = '';
+            
+            const filteredPatients = db.patients.filter(patient => 
+                patient.name.toLowerCase().includes(filter.toLowerCase()) ||
+                patient.contact.includes(filter)
+            );
+            
+            filteredPatients.forEach(patient => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${patient.id}</td>
+                    <td class="py-3 px-4">${patient.name}</td>
+                    <td class="py-3 px-4">${patient.contact}</td>
+                    <td class="py-3 px-4">
+                        <button class="text-blue-600 hover:text-blue-800" onclick="viewPatientDetails(${patient.id})">View</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        window.viewPatientDetails = function(id) {
+            const patient = db.patients.find(p => p.id === id);
+            if (patient) {
+                alert(
+                    `Patient Details:\n\n` +
+                    `Name: ${patient.name}\n` +
+                    `Contact: ${patient.contact}\n` +
+                    `Age: ${patient.age}\n` +
+                    `Gender: ${patient.gender}\n` +
+                    `Registered: ${patient.registeredDate}`
+                );
+            }
+        };
+
+        document.getElementById('doctor-patient-search').addEventListener('input', (e) => {
+            updateDoctorPatientTable(e.target.value);
+        });
+
+        // Doctor Add Patient Form
+        document.getElementById('patient-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('patient-name').value;
+            const contact = document.getElementById('patient-contact').value;
+            const age = parseInt(document.getElementById('patient-age').value);
+            const gender = document.getElementById('patient-gender').value;
+            
+            if (!name || !contact || !age || !gender) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            // Add new patient
+            const newId = db.patients.length > 0 ? Math.max(...db.patients.map(p => p.id)) + 1 : 1;
+            db.patients.push({
+                id: newId,
+                name,
+                contact,
+                age,
+                gender,
+                registeredDate: new Date().toISOString().split('T')[0]
+            });
+            
+            alert('Patient added successfully!');
+            
+            document.getElementById('patient-form').reset();
+            document.getElementById('doctor-add-patient-form').classList.add('hidden');
+            updateDoctorPatientTable();
+        });
+
+        document.getElementById('cancel-add-patient').addEventListener('click', () => {
+            document.getElementById('patient-form').reset();
+            document.getElementById('doctor-add-patient-form').classList.add('hidden');
+        });
+
+        // Utility Functions
+        function resetForms() {
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
+            document.getElementById('medicine-form').reset();
+            document.getElementById('give-medicine-form').reset();
+            document.getElementById('prescribe-medicine-form').reset();
+            document.getElementById('patient-form').reset();
+            
+            document.getElementById('admin-add-medicine-form').classList.add('hidden');
+            document.getElementById('admin-medicine-list').classList.add('hidden');
+            document.getElementById('admin-statistics-section').classList.add('hidden');
+            document.getElementById('admin-user-monitoring').classList.add('hidden');
+            
+            document.getElementById('pharmacist-medicine-list').classList.add('hidden');
+            document.getElementById('pharmacist-give-medicine-form').classList.add('hidden');
+            document.getElementById('pharmacist-daily-records-section').classList.add('hidden');
+            
+            document.getElementById('doctor-medicine-list').classList.add('hidden');
+            document.getElementById('doctor-prescribe-medicine-form').classList.add('hidden');
+            document.getElementById('doctor-patient-list').classList.add('hidden');
+            document.getElementById('doctor-add-patient-form').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
