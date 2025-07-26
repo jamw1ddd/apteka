@@ -1,0 +1,31 @@
+<h3>Dori Tarixi</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Vaqt</th>
+            <th>Amal</th>
+            <th>Dori nomi</th>
+            <th>Soni</th>
+            <th>Foydalanuvchi</th>
+            <th>Chiqarilgan bo‘lsa — Qabul qiluvchi</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for item in history %}
+    <tr>
+        <td>{{ item.medicine.name }}</td>
+        <td>{{ item.user.username }}</td>
+        <td>
+            {% if item.to_user %}
+                {{ item.to_user.username }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.action }}</td>
+        <td>{{ item.timestamp|date:"Y-m-d H:i" }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

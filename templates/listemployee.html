@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="nk-content ">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                <div class="nk-block-head nk-block-head-sm">
+                    <div class="nk-block-between">
+                        <div class="nk-block-head-content">
+                            <h3 class="nk-block-title page-title">Hodimlar Ro'yxati</h3>
+                            <div class="nk-block-des text-soft">
+                                <p>Sizning korxonangizda {{ users|length }} ta hodim bor</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nk-block">
+                    <div class="card card-bordered card-stretch">
+                        <div class="card-inner-group">
+                            <div class="card-inner p-0">
+                                <div class="nk-tb-list nk-tb-ulist">
+                                    <div class="nk-tb-item nk-tb-head">
+                                        <div class="nk-tb-col nk-tb-col-check"></div>
+                                        <div class="nk-tb-col"><span class="sub-text">Hodim</span></div>
+                                        <div class="nk-tb-col tb-col-md"><span class="sub-text">Joyi</span></div>
+                                        <div class="nk-tb-col tb-col-md"><span class="sub-text">Telefon raqami</span></div>
+                                        <div class="nk-tb-col tb-col-lg"><span class="sub-text">Lavozimi</span></div>
+                                        <div class="nk-tb-col tb-col-sm"><span class="sub-text">Batafsil</span></div>
+                                        <div class="nk-tb-col tb-col-md"></div>
+                                        <div class="nk-tb-col nk-tb-col-tools"></div>
+                                    </div>
+
+                                    {% for staff in users %}
+                                    <div class="nk-tb-item">
+                                        <div class="nk-tb-col nk-tb-col-check">
+                                            <div class="custom-control custom-control-sm custom-checkbox notext">
+                                                <input type="checkbox" class="custom-control-input" id="uid{{ staff.id }}">
+                                            </div>
+                                        </div>
+
+                                        <div class="nk-tb-col">
+                                            <a href="#">
+                                                <div class="user-card">
+                                                    <div class="user-avatar bg-primary-dim">
+                                                        <span>{{ staff.first_name|default:"" |slice:":1" }}{{ staff.last_name|default:""|slice:":1" }}</span>
+                                                    </div>
+                                                    <div class="user-info">
+                                                        <span class="tb-lead">{{ staff.first_name }} {{ staff.last_name }}
+                                                            <span class="dot dot-warning d-md-none ms-1"></span></span>
+                                                        <span>{{ staff.email }}</span>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        <div class="nk-tb-col tb-col-md"><span class="fw-medium">{{ staff.place }}</span></div>
+                                        <div class="nk-tb-col tb-col-md"><span>{{ staff.phone }}</span></div>
+                                        <div class="nk-tb-col tb-col-lg"><span>{{ staff.who }}</span></div>
+                                        <div class="nk-tb-col tb-col-sm">
+                                            <a href="{% url 'user_medicines' staff.id %}" class="btn btn-sm btn-primary">Zahirani Ko'rish</a>
+                                        </div>
+                                        <div class="nk-tb-col tb-col-md"></div>
+                                        <div class="nk-tb-col nk-tb-col-tools">
+                                            <!-- optional actions -->
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    
+                                    {% if users|length == 0 %}
+                                    <div class="nk-tb-item">
+                                        <div class="nk-tb-col" colspan="6">
+                                            <p class="text-center text-danger p-3">Hozircha hodimlar mavjud emas.</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

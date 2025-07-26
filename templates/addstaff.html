@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="nk-content ">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                <div class="nk-block-head nk-block-head-sm">
+                    <div class="nk-block-between">
+                        <div class="nk-block-head-content">
+                            <h3 class="nk-block-title page-title">Hodim Qo‘shish</h3>
+                            <div class="nk-block-des text-soft">
+                                <p>Hodimni qo‘shish uchun quyidagi formani to‘ldiring.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nk-block">
+                    <div class="card card-bordered">
+                        <div class="card-inner">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <div class="row gy-4">
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="first_name">Ism</label>
+                                            <input type="text" name="first_name" class="form-control" id="first_name" placeholder="Ism" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="last_name">Familiya</label>
+                                            <input type="text" name="last_name" class="form-control" id="last_name" placeholder="Familiya" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="username">Username</label>
+                                            <input type="text" name="username" class="form-control" id="username" placeholder="Foydalanuvchi nomi" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="email">Email</label>
+                                            <input type="email" name="email" class="form-control" id="email" placeholder="Email">
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="password">Parol</label>
+                                            <input type="password" name="password" class="form-control" id="password" placeholder="Parol" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="role">Hodim roli</label>
+                                            <select name="role" class="form-select js-select2" id="role">
+                                                <option value="admin">Admin</option>
+                                                <option value="staff">Staff</option>
+                                                <option value="doctor">Doctor</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="place">Bo‘lim (place)</label>
+                                            <input type="text" name="place" class="form-control" id="place" placeholder="Bo‘lim nomi">
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="who">Kim (who)</label>
+                                            <input type="text" name="who" class="form-control" id="who" placeholder="Mas'ul shaxs">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <button type="submit" class="btn btn-primary">Hodimni Qo‘shish</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div> <!-- .card-inner -->
+                    </div> <!-- .card -->
+                </div> <!-- .nk-block -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

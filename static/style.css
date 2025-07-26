@@ -1,122 +1,61 @@
-/*
-  Bu fayl faqat Tailwind CSS klasslari bilan birga ishlatiladigan
-  qo'shimcha yoki maxsus stillarni o'z ichiga oladi.
-  Tailwind CSS CDN linki HTML fayllarining <head> qismiga qo'shilgan bo'lishi kerak.
-*/
-
-/* Umumiy stil sozlamalari */
 body {
-    font-family: 'Inter', sans-serif; /* Yaxshiroq shrift tanlovi */
-    /* Tailwind klasslari body uchun fon rangini belgilaydi */
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-/* Yashirish klassi (agar JavaScriptsiz foydalanilsa, qo'lda boshqarish kerak) */
-.hidden {
-    display: none !important; /* Ustuvorlikni oshirish */
+.login-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
 }
 
-/* Hover effektlari */
-.medicine-card:hover,
-.patient-card:hover {
-    transform: translateY(-5px);
-    transition: transform 0.3s ease-in-out; /* Yumshoqroq o'tish */
+.login-header {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-/* Input, select va textarea elementlari uchun umumiy stil */
-/* Tailwind allaqachon ko'p stillarni beradi, bu yerda faqat qo'shimchalar */
-input[type="text"],
-input[type="password"],
-input[type="number"],
-select,
-textarea {
-    /* Tailwind klasslari: w-full px-3 py-2 border rounded-lg */
-    /* focus:outline-none focus:ring-2 focus:ring-green-500 (yoki boshqa rang) */
-    /* Bu yerda faqat qo'shimcha yoki o'zgartirishlar bo'lishi mumkin */
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Yengil soya qo'shish */
+.login-header h2 {
+    margin: 0;
+    color: #333;
 }
 
-/* Focus holati uchun ranglar HTMLda Tailwind klasslari bilan berilgan */
-/* Masalan: focus:ring-green-500 */
-
-/* Tugmalar uchun umumiy stil */
-/* Tailwind allaqachon ko'p stillarni beradi, bu yerda faqat qo'shimchalar */
-button,
-.btn,
-a.block.w-full { /* Kirish sahifasidagi link tugmalar uchun */
-    display: block; /* Block element qilib belgilash */
-    text-align: center; /* Matnni markazga joylash */
-    text-decoration: none; /* Tagidagi chiziqni olib tashlash */
-    /* Tailwind klasslari: w-full py-2 rounded-lg hover:bg-color-darker transition duration-300 */
-    /* Bu yerda faqat qo'shimcha yoki o'zgartirishlar bo'lishi mumkin */
-    font-weight: 600; /* Semiroq shrift */
-    white-space: nowrap; /* Matnni bir qatorda saqlash */
+.input-group {
+    margin-bottom: 15px;
 }
 
-/* Qidiruv inputi uchun ikonka */
-.relative input[type="text"] {
-    padding-left: 2.5rem; /* Tailwind pl-10 ga mos keladi */
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
 }
 
-.relative i {
-    position: absolute;
-    left: 0.75rem; /* Tailwind left-3 ga mos keladi */
-    top: 50%; /* Vertikal markazga joylash */
-    transform: translateY(-50%); /* Vertikal markazga joylash */
-    color: #9ca3af; /* Tailwind text-gray-400 ga mos keladi */
-    pointer-events: none; /* Ikonka ustiga bosilganda inputga o'tishini ta'minlash */
+.input-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
 }
 
-/* Jadval stillari */
-table {
-    /* Tailwind klasslari: min-w-full bg-white border rounded-lg */
-    border-collapse: collapse; /* Chegaralarni birlashtirish */
-    width: 100%; /* To'liq kenglik */
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 16px;
 }
 
-th, td {
-    /* Tailwind klasslari: py-3 px-4 text-left */
-    padding: 0.75rem 1rem; /* Kengroq padding */
-    text-align: left;
-    border-bottom: 1px solid #e5eeef; /* Yengilroq chegara rangi */
+button:hover {
+    background-color: #45a049;
 }
-
-th {
-    /* Tailwind klasslari: bg-gray-100 */
-    font-weight: 600; /* Semiroq shrift */
-    color: #4b5563; /* Tailwind text-gray-700 ga mos keladi */
-    background-color: #f9fafb; /* Yengilroq fon rangi */
-}
-
-tbody tr:nth-child(even) {
-    background-color: #fcfdfe; /* Har ikkinchi qator uchun yengil fon */
-}
-
-tbody tr:hover {
-    background-color: #f3f4f6; /* Hover effekti */
-    transition: background-color 0.2s ease-in-out;
-}
-
-/* Scrollable jadvallar uchun */
-.overflow-x-auto {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch; /* Mobil qurilmalarda silliq scroll */
-}
-
-/* Umumiy konteyner stillari */
-.container {
-    max-width: 1280px; /* Kengroq konteyner */
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
-
-/* Responsive dizayn uchun qo'shimcha stillar (agar kerak bo'lsa) */
-@media (max-width: 768px) {
-    .grid-cols-1.md\:grid-cols-2,
-    .grid-cols-1.md\:grid-cols-3 {
-        grid-template-columns: 1fr; /* Kichik ekranlarda bir ustun */
-    }
-}
-
-/* Shrift importi (agar Google Fonts ishlatilsa) */
-/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); */
-/* Agar ishlatmoqchi bo'lsangiz, buni style.css ning eng boshiga qo'ying */

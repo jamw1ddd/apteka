@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="nk-content ">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                <div class="nk-block-head nk-block-head-sm">
+                    <div class="nk-block-between">
+                        <h3 class="nk-block-title page-title">{{ staff_user.get_full_name }} ning dorilari</h3>
+                        <div class="nk-block-des text-soft">
+                            <p>{{ staff_user.place }} joyidagi {{staff_user.who}}ga biriktirilgan dorilar ro‘yxati keltirilgan.</p>
+                        </div>
+                        <div class="nk-block-head-content">
+                            <a href="{% url 'addmedicine' %}" class="btn btn-primary"><em class="icon ni ni-plus"></em><span>Dori qo'shish</span></a>
+                        </div>
+                    </div>
+                </div>
+
+                {% if medicines %}
+                <div class="nk-block">
+                    <div class="card card-bordered">
+                        <div class="card-inner-group">
+                            <div class="card-inner p-0">
+                                <div class="nk-tb-list">
+                                    <div class="nk-tb-item nk-tb-head">
+                                        <div class="nk-tb-col"><span>Dori nomi</span></div>
+                                        <div class="nk-tb-col"><span>Umumiy nomi</span></div>
+                                        <div class="nk-tb-col"><span>Og'irlik</span></div>
+                                        <div class="nk-tb-col"><span>Kategoriya</span></div>
+                                        <div class="nk-tb-col"><span>Narxi</span></div>
+                                        <div class="nk-tb-col"><span>Ombor (quti)</span></div>
+                                        <div class="nk-tb-col"><span>Amal muddati</span></div>
+                                    </div>
+                                    {% for med in medicines %}
+                                    <div class="nk-tb-item">
+                                        <div class="nk-tb-col">{{ med.name }}</div>
+                                        <div class="nk-tb-col">{{ med.generic_name }}</div>
+                                        <div class="nk-tb-col">{{ med.weight }}</div>
+                                        <div class="nk-tb-col">{{ med.category }}</div>
+                                        <div class="nk-tb-col">{{ med.price }} so'm</div>
+                                        <div class="nk-tb-col">{{ med.quantity }}</div>
+                                        <div class="nk-tb-col">
+                                            {% if med.expiry_date %}
+                                                {{ med.expiry_date }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                    <p class="text-muted">Siz hali hech qanday dori qo‘shmagansiz.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

@@ -1,44 +1,83 @@
 {%load static%}
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="zxx" class="js">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>Dori-darmon boshqaruv tizimi - Kirish</title>
-    <link rel="stylesheet" href="{%static 'style.css'%}">
+    <meta charset="utf-8">
+    <meta name="author" content="Softnio">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description"
+        content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
+    <link rel="shortcut icon" href="images/favicon.png">
+    <title>Tizim</title>
+    <link rel="stylesheet" href="{%static 'css/dashlite.css'%}">
+    <script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-91615293-4"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'UA-91615293-4');</script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-96">
-        <div class="text-center mb-8">
-            <img src="https://placehold.co/150x150" alt="Dorixona logosi — yashil xoch va dori idishi" class="mx-auto mb-4 rounded-full">
-            <h1 class="text-2xl font-bold text-gray-800">Dori-darmon boshqaruv tizimi</h1>
-            <p class="text-gray-600">Davom etish uchun tizimga kiring</p>
+
+<body class="nk-body ui-rounder npc-default pg-auth">
+    <div class="nk-app-root">
+        <div class="nk-main ">
+            <div class="nk-wrap nk-wrap-nosidebar">
+                <div class="nk-content ">
+                    <div class="nk-block nk-block-middle nk-auth-body  wide-xs">
+                        <div class="brand-logo pb-4 text-center"><a href="/demo7/index.html" class="logo-link"><img
+                                    class="logo-light logo-img logo-img-lg" src="{%static 'images/logo.png'%}"
+                                    srcset="images/logo2x.png 2x" alt="logo"><img class="logo-dark logo-img logo-img-lg"
+                                    src="{%static 'images/logo-dark.png'%}" srcset="images/logo-dark2x.png 2x" alt="logo-dark"></a>
+                        </div>
+                        <div class="card card-bordered">
+                            <div class="card-inner card-inner-lg">
+                                <div class="nk-block-head">
+                                    <div class="nk-block-head-content">
+                                        <h4 class="nk-block-title">Tizimga Kirish</h4>
+                                    </div>
+                                </div>
+                                <form method="post" action="{% url 'login' %}">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <div class="form-label-group">
+                                            <label class="form-label" for="username">Username</label>
+                                        </div>
+                                        <div class="form-control-wrap">
+                                            <input type="text" name="username" class="form-control form-control-lg" id="username"
+                                                placeholder="Foydalanuvchi nomi yoki email" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="form-label-group">
+                                            <label class="form-label" for="password">Parol</label>
+                                        </div>
+                                        <div class="form-control-wrap">
+                                            <a href="#" class="form-icon form-icon-right passcode-switch lg" data-target="password">
+                                                <em class="passcode-icon icon-show icon ni ni-eye"></em>
+                                                <em class="passcode-icon icon-hide icon ni ni-eye-off"></em>
+                                            </a>
+                                            <input type="password" name="password" class="form-control form-control-lg" id="password"
+                                                placeholder="Parolni kiriting" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <button class="btn btn-lg btn-primary btn-block" type="submit">Kirish</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nk-footer nk-auth-footer-full">
+                        <div class="container wide-lg">
+                            <div class="row g-3">
+                                <div class="col-lg-6 order-lg-last">
+                                </div>
+                                <div class="col-lg-6">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="mb-4">
-            <label for="username" class="block text-gray-700 mb-2">Foydalanuvchi nomi</label>
-            <input type="text" id="username" placeholder="Foydalanuvchi nomingizni kiriting" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-        </div>
-        
-        <div class="mb-6">
-            <label for="password" class="block text-gray-700 mb-2">Parol</label>
-            <input type="password" id="password" placeholder="Parolingizni kiriting" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-        </div>
-        
-        <div class="mb-4">
-            <label for="role" class="block text-gray-700 mb-2">Rolni tanlang</label>
-            <select id="role" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                <option value="admin">Admin (to‘liq ruxsat)</option>
-                <option value="pharmacist">Dorixona xodimi</option>
-                <option value="doctor">Shifokor</option>
-            </select>
-        </div>
-        
-        <!-- Bu tugmalar faqat vizual ko'rinish uchun. JavaScriptsiz sahifalararo o'tish uchun <a> teglaridan foydalanish kerak. -->
-        <a href="admin.html" class="block w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition duration-300 text-center mb-2">Admin paneliga kirish</a>
-        <a href="pharmacist.html" class="block w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 text-center mb-2">Dorixona xodimi paneliga kirish</a>
-        <a href="doctor.html" class="block w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-300 text-center">Shifokor paneliga kirish</a>
     </div>
 </body>
+
 </html>

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="nk-content">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                <div class="nk-block-head nk-block-head-sm">
+                    <div class="nk-block-between">
+                        <div class="nk-block-head-content">
+                            <h3 class="nk-block-title page-title">Dori qo‘shish</h3>
+                            <div class="nk-block-des text-soft">
+                                <p>Dorini qo‘shish uchun quyidagi maydonlarni to‘ldiring.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="nk-block">
+                        <div class="card card-bordered">
+                            <div class="card-inner">
+                                <div class="row gy-4">
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="name">Dori nomi</label>
+                                            <input type="text" class="form-control" id="name" name="name" required placeholder="Dori nomi">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="generic_name">Umumiy nomi</label>
+                                            <input type="text" class="form-control" id="generic_name" name="generic_name" placeholder="Umumiy nomi">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="weight">Og‘irlik</label>
+                                            <input type="text" class="form-control" id="weight" name="weight" placeholder="Masalan: 250mg">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="category">Kategoriya</label>
+                                            <select class="form-select js-select2" id="category" name="category" required>
+                                                <option value="">Tanlang</option>
+                                                <option value="tablet">Tabletkalar</option>
+                                                <option value="syrup">Sirop</option>
+                                                <option value="vitamin">Vitamin</option>
+                                                <option value="inhaler">Ingalator</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="price">Narxi</label>
+                                            <input type="number" step="0.01" class="form-control" id="price" name="price" placeholder="Narxi" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quantity">Zaxira (quti)</label>
+                                            <input type="number" class="form-control" id="quantity" name="quantity" min="0" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="expiry_date">Amal qilish muddati</label>
+                                            <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <button type="submit" class="btn btn-primary">Dorini qo‘shish</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
