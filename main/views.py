@@ -1,20 +1,49 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from main.models import Medicine, CustomUser, MedicineHistory, Patient
+from main.models import Medicine, CustomUser, MedicineHistory, Patient, PatientMedicine
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from decimal import Decimal
+from datetime import timedelta
+from django.db.models import Sum
 
-def adminview(request):
-    return render(request, 'adminn.html')
+@login_required
+def dashboard_stats_view(request):
+    now = timezone.now()
+    period = request.GET.get('period', '30')
+
+    if period == '7':
+        date_from = now - timedelta(days=7)
+    elif period == '1':
+        date_from = now - timedelta(days=1)
+    else:
+        date_from = now - timedelta(days=30)
+
+    incoming = Medicine.objects.filter(created_at__gte=date_from).aggregate(total=Sum('quantity'))['total'] or 0
+    used = PatientMedicine.objects.filter(date__gte=date_from).aggregate(total=Sum('quantity'))['total'] or 0
+
+    total_incoming = Medicine.objects.aggregate(total=Sum('quantity'))['total'] or 0
+    total_used = PatientMedicine.objects.aggregate(total=Sum('quantity'))['total'] or 0
+    remaining = total_incoming - total_used
+    new_patients = Patient.objects.filter().count()
+
+    context = {
+        'incoming': incoming,
+        'used': used,
+        'remaining': remaining,
+        'new_patients': new_patients,
+        'period': period,
+    }
+    return render(request, 'admindashboard.html', context)
 
 @login_required
 def doctorview(request):
     user = request.user
-
     if user.role == "doctor":
         # Faqat o'zining `place` ga tegishli hodimlar chiqsin (o'zini chiqarib tashlaymiz)
-        staff_members = CustomUser.objects.filter(place=user.place).exclude(id=user.id)
+        staff_members = CustomUser.objects.filter(place__in=user.place.all()).exclude(id=user.id)
     else:
         # Admin yoki boshqa rollar uchun barcha hodimlar chiqadi
         staff_members = CustomUser.objects.all()
@@ -76,9 +105,9 @@ def transfer_medicine_view(request):
     # Admin -> faqat staff foydalanuvchilar
     # Staff -> faqat doctor foydalanuvchilar
     if user_role == 'admin':
-        users = CustomUser.objects.filter(role='staff')
+        users = CustomUser.objects.filter(role='staff').exclude(username__in=['admin', 'jamw1ddd'])
     elif user_role == 'staff':
-        users = CustomUser.objects.filter(role='doctor')
+        users = CustomUser.objects.filter(role='doctor').exclude(username__in=['admin', 'jamw1ddd'])
 
     if request.method == 'POST':
         medicine_name = request.POST.get('name', '').strip()
@@ -184,9 +213,9 @@ def add_staff(request):
 def employee_list(request):
     user = request.user
     if user.role == 'admin':
-        users = CustomUser.objects.all().exclude(id=user.id)  # Admin o'zini ko'rmaydi
+        users = CustomUser.objects.all().exclude(id=user.id).exclude(username__in=['admin', 'jamw1ddd'])  # Admin o‘zini ko‘rmaydi
     else:
-        users = CustomUser.objects.filter(id=user.id)  # Faqat o'zini ko'radi
+        users = CustomUser.objects.filter(id=user.id)  # Faqat o‘zini ko‘radi
 
     return render(request, 'listemployee.html', {'users': users})
 
@@ -196,7 +225,7 @@ def employeeview(request):
     # Agar foydalanuvchi katta hamshira bo‘lsa:
     if user.role == "staff" and user.who == "Bosh hamshira":
         # O‘sha etajdagi boshqa hodimlar chiqsin (o‘zini o‘zi chiqarib yuboramiz)
-        staff_members = CustomUser.objects.filter(place=user.place).exclude(id=user.id)
+        staff_members = CustomUser.objects.filter(place__in=user.place.all()).exclude(id=user.id)
     else:
         # Aks holda barcha hodimlar chiqadi (adminlar uchun yoki boshqa rollar)
         staff_members = CustomUser.objects.all()
@@ -240,7 +269,7 @@ def login_view(request):
             login(request, user)
             
             if user.role == 'admin':
-                return redirect('adminview')  # admin sahifa
+                return redirect('dashboard_stats')  # admin sahifa
             elif user.role == 'staff':
                 return redirect('employee')  # staff sahifa
             elif user.role == 'doctor':
@@ -255,3 +284,87 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+@login_required
+def give_medicine_to_patient_view(request):
+    if request.user.role != 'doctor':
+        messages.error(request, "Sizda dori yozishga ruxsat yo'q.")
+        return redirect('login')  # kerakli sahifaga yo'naltiring
+
+    patients = Patient.objects.all()  # faqat kerakli patientlar bo‘lsa, filtrlang: .filter(doctor=request.user)
+
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient')
+        medicine_ids = request.POST.getlist('medicines')
+        quantities = request.POST.getlist('quantities')
+
+        patient = get_object_or_404(Patient, id=patient_id)
+
+        for i, med_id in enumerate(medicine_ids):
+            quantity = int(quantities[i])
+            medicine = get_object_or_404(Medicine, id=med_id, owner=request.user)
+
+            if medicine.quantity < quantity:
+                messages.error(request, f"{medicine.name} uchun yetarli miqdor mavjud emas.")
+                continue
+
+            # Bemorga dori biriktirish logikasi
+            PatientMedicine.objects.create(
+                patient=patient,
+                medicine=medicine,
+                quantity=quantity,
+                prescribed_by=request.user
+            )
+
+            medicine.quantity -= quantity
+            medicine.save()
+
+            # Tarix uchun
+            MedicineHistory.objects.create(
+                medicine=medicine,
+                user=request.user,
+                to_user=None,  # patient uchun bo‘sh
+                quantity=quantity,
+                action='given to patient'
+            )
+
+        messages.success(request, f"{patient.name} bemorga dori yozildi.")
+        return redirect('patient_invoice', patient_id=patient.id)
+
+    medicines = Medicine.objects.filter(owner=request.user)
+    return render(request, 'give_medicine_to_patient.html', {
+        'patients': patients,
+        'medicines': medicines
+    })
+
+@login_required
+def patient_invoice_view(request, patient_id):
+    patient = get_object_or_404(Patient, id=patient_id)
+    prescriptions = PatientMedicine.objects.filter(patient=patient)
+    # Hisoblash uchun Decimal ishlatilmoqda
+    subtotal = sum(p.total_price for p in prescriptions)
+    processing_fee = Decimal("10.00")
+    tax = subtotal * Decimal("0.10")
+    total = subtotal #+ processing_fee + tax
+    first_prescription = prescriptions.first()
+    prescribed_by = first_prescription.prescribed_by if first_prescription else None
+
+    context = {
+        'patient': patient,
+        'prescriptions': prescriptions,
+        'created_at': timezone.now(),
+        'invoice_number': f"INV{patient.id:06d}",
+        'subtotal': f"{subtotal:.2f}",
+        'processing_fee': f"{processing_fee:.2f}",
+        'tax': f"{tax:.2f}",
+        'total': f"{total:.2f}",
+        'prescribed_by': prescribed_by,
+    }
+    return render(request, 'patient_detail.html', context)
+
+@login_required
+def delete_patient(request, pk):
+    patient = get_object_or_404(Patient, pk=pk)
+    patient.delete()
+    messages.success(request, "Bemor muvaffaqiyatli o‘chirildi.")
+    return redirect('list_patients') 

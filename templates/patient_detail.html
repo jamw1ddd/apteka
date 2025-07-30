@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+{%load static%}
+<div class="nk-content">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                <div class="nk-block-head">
+                    <div class="nk-block-between g-3">
+                        <div class="nk-block-head-content">
+                            <h3 class="nk-block-title page-title">Hisob-faktura 
+                                <strong class="text-primary small">#{{ patient.id|stringformat:"06d" }}</strong>
+                            </h3>
+                            {% if prescribed_by %}
+                                <p><strong>Yozgan shifokor:</strong> {{ prescribed_by.get_full_name }}</p>
+                                <p><strong>Joyi:</strong> {%for p in prescribed_by.place.all%}{{ p }}{%endfor%}</p>
+                                <p><strong>Lavozimi:</strong> {{ prescribed_by.who }}</p>
+                            {% else %}
+                                <p><em>Yozgan shifokor topilmadi.</em></p>
+                            {% endif %}
+                            <div class="nk-block-des text-soft">
+                                <ul class="list-inline">
+                                    <li>Yaratilgan sana: 
+                                        <span class="text-base">{{ created_at|date:"j F, Y H:i" }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="nk-block-head-content">
+                            <a href="{% url 'list_patients' %}" class="btn btn-outline-light bg-white d-none d-sm-inline-flex">
+                                <em class="icon ni ni-arrow-left"></em><span>Orqaga</span>
+                            </a>
+                            <a href="{% url 'list_patients' %}" class="btn btn-icon btn-outline-light bg-white d-inline-flex d-sm-none">
+                                <em class="icon ni ni-arrow-left"></em>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nk-block">
+                    <div class="invoice">
+                        <div class="invoice-action">
+                            <a class="btn btn-icon btn-lg btn-white btn-dim btn-outline-primary" 
+                               href="#" target="_blank">
+                                <em class="icon ni ni-printer-fill"></em>
+                            </a>
+                        </div>
+                        <div class="invoice-wrap">
+                            <div class="invoice-head">
+                                <div class="invoice-contact">
+                                    <span class="overline-title">Kimga</span>
+                                    <div class="invoice-contact-info">
+                                        <h4 class="title">{{ patient.name }} {{ patient.surname }}</h4>
+                                        <ul class="list-plain">
+                                            <li>
+                                                <em class="icon ni ni-map-pin-fill"></em>
+                                                <span>{{ patient.address }}</span>
+                                            </li>
+                                            <li>
+                                                <em class="icon ni ni-call-fill"></em>
+                                                <span>{{ patient.phone }}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="invoice-desc">
+                                    <h3 class="title">Hisob-faktura</h3>
+                                    <ul class="list-plain">
+                                        <li class="invoice-id"><span>Faktura raqami</span>: 
+                                            <span>{{ invoice_number }}</span>
+                                        </li>
+                                        <li class="invoice-date"><span>Sana</span>: 
+                                            <span>{{ created_at|date:"j F, Y" }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="invoice-bills">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th class="w-150px">Mahsulot ID</th>
+                                                <th class="w-60">Tavsif</th>
+                                                <th>Narx</th>
+                                                <th>Miqdor</th>
+                                                <th>Jami</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if prescriptions %}
+                                                {% for item in prescriptions %}
+                                                    <tr>
+                                                        <td>{{ item.medicine.id }}</td>
+                                                        <td>{{ item.medicine.name }} - {{ item.medicine.generic_name }}</td>
+                                                        <td>{{ item.medicine.price }}</td>
+                                                        <td>{{ item.quantity }}</td>
+                                                        <td>{{ item.total_price }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-danger">Hech qanday dori tayinlanmagan</td>
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="2"></td>
+                                                <td colspan="2"><strong>Umumiy</strong></td>
+                                                <td><strong>{{ total }}So'm</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div> <!-- .invoice-wrap -->
+                    </div> <!-- .invoice -->
+                </div> <!-- .nk-block -->
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

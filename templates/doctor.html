@@ -52,7 +52,7 @@
                                             </a>
                                         </div>
                                         <div class="nk-tb-col tb-col-md">
-                                            <a href="#"><span class="fw-medium">{{ staff.place }}</span></a>
+                                            <a href="#"><span class="fw-medium">{% for place in staff.place.all %}{{ place.name }} {% endfor %}</span></a>
                                         </div>
                                         <div class="nk-tb-col tb-col-md">
                                             <span>{{ staff.phone }}</span>
