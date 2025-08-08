@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mb-4">Barcha joylardagi dorilar ro'yxati (admin uchun)</h3>
+
+    {% for place in places %}
+    <div class="card card-bordered mb-5">
+        <div class="card-header bg-light">
+            <h5 class="card-title">{{ place.name }} — dorilar</h5>
+        </div>
+        <div class="card-body">
+            {% if place.medicine_set.all %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Dori nomi</th>
+                            <th>Umumiy nomi</th>
+                            <th>Og'irlik</th>
+                            <th>Kategoriya</th>
+                            <th>Narxi</th>
+                            <th>Miqdori</th>
+                            <th>Amal muddati</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for med in place.medicine_set.all %}
+                        <tr>
+                            <td>{{ med.name }}</td>
+                            <td>{{ med.generic_name }}</td>
+                            <td>{{ med.weight }}</td>
+                            <td>{{ med.category }}</td>
+                            <td>{{ med.price }} so'm</td>
+                            <td>{{ med.quantity }}</td>
+                            <td>
+                                {% if med.expiry_date %}
+                                    {{ med.expiry_date }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="text-muted">Bu joyga hech qanday dori qo‘shilmagan.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

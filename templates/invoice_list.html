@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="nk-content">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                <div class="nk-block-head">
+                    <h3 class="nk-block-title">Bemor uchun cheklar roʻyxati: {{ patient.name }} {{ patient.surname }}</h3>
+                    <a href="{% url 'list_patients' %}" class="btn btn-outline-light bg-white mt-2">
+                        <em class="icon ni ni-arrow-left"></em> Orqaga
+                    </a>
+                </div>
+
+                <div class="nk-block">
+                    <div class="card">
+                        <div class="card-inner">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Chek sanasi</th>
+                                        <th>Mahsulotlar soni</th>
+                                        <th>Umumiy narx</th>
+                                        <th>Amal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if invoices %}
+                                        {% for inv in invoices %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ inv.chek_sana|date:"d-m-Y H:i" }}</td>
+                                                <td>{{ inv.items_count }}</td>
+                                                <td>{{ inv.total }} so'm</td>
+                                                <td>
+                                                    <a href="{% url 'patient_invoice_view_by_date' patient.id inv.date_str %}" class="btn btn-success">
+                                                        Ko‘rish
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-danger">
+                                                Cheklar mavjud emas
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

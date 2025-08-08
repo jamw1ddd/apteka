@@ -3,58 +3,118 @@
 <div class="nk-content container-fluid">
   <div class="nk-content-inner">
     <div class="nk-content-body">
-      <div class="nk-block-head nk-block-head-sm">
-        <div class="nk-block-between">
+      
+      <!-- Sarlavha va foydalanuvchi -->
+      <div class="nk-block-head nk-block-head-sm mb-3">
+        <div class="nk-block-between align-items-center">
           <div class="nk-block-head-content">
             <h3 class="nk-block-title page-title">Statistika</h3>
-            <div class="nk-block-des text-soft"><p>Assalomu alaykum, {% if request.user.get_full_name %}{{ request.user.get_full_name }}{% else %}{{ request.user.username }}{% endif %}</p></div>
+            <div class="nk-block-des text-soft">
+              <p>Assalomu alaykum, 
+                {% if request.user.get_full_name %}
+                  {{ request.user.get_full_name }}
+                {% else %}
+                  {{ request.user.username }}
+                {% endif %}
+              </p>
+            </div>
           </div>
-          <div class="nk-block-head-content">
-            <form method="get">
+        </div>
+      </div>
+
+      <!-- Filter form alohida blokda -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Davr:</label>
               <select name="period" onchange="this.form.submit()" class="form-select">
                 <option value="30" {% if period == '30' %}selected{% endif %}>Oxirgi 30 kun</option>
                 <option value="7" {% if period == '7' %}selected{% endif %}>Oxirgi 1 hafta</option>
                 <option value="1" {% if period == '1' %}selected{% endif %}>Bugungi kun</option>
               </select>
-            </form>
-          </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Boshlanish sanasi:</label>
+              <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Tugash sanasi:</label>
+              <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+          </form>
         </div>
       </div>
+
       {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
       {% else %}
       <div class="nk-block">
         <div class="row g-gs">
+
           <!-- Kelgan dorilar -->
           <div class="col-xxl-3 col-sm-6">
             <div class="card">
-              <div class="nk-ecwg nk-ecwg6"><div class="card-inner">
-                <h6 class="title">Kelgan dorilar</h6>
-                <div class="amount">{{ incoming }}</div>
-              </div></div>
+              <div class="nk-ecwg nk-ecwg6">
+                <div class="card-inner">
+                  <h6 class="title">Kelgan dorilar</h6>
+                  <div class="amount">{{ incoming }}</div>
+                </div>
+              </div>
             </div>
           </div>
+
           <!-- Ishlatilgan dorilar -->
           <div class="col-xxl-3 col-sm-6">
-            <div class="card"><div class="nk-ecwg nk-ecwg6"><div class="card-inner">
-              <h6 class="title">Ishlatilgan dorilar</h6>
-              <div class="amount">{{ used }}</div>
-            </div></div></div>
+            <div class="card">
+              <div class="nk-ecwg nk-ecwg6">
+                <div class="card-inner">
+                  <h6 class="title">Ishlatilgan dorilar</h6>
+                  <div class="amount">{{ used }}</div>
+                </div>
+              </div>
+            </div>
           </div>
+
           <!-- Qolgan dorilar -->
           <div class="col-xxl-3 col-sm-6">
-            <div class="card"><div class="nk-ecwg nk-ecwg6"><div class="card-inner">
-              <h6 class="title">Qolgan dorilar </h6>
-              <div class="amount">{{ remaining }}</div>
-            </div></div></div>
+            <div class="card">
+              <div class="nk-ecwg nk-ecwg6">
+                <div class="card-inner">
+                  <h6 class="title">Qolgan dorilar</h6>
+                  <div class="amount">{{ remaining }}</div>
+                </div>
+              </div>
+            </div>
           </div>
+
           <!-- Yangi bemorlar -->
           <div class="col-xxl-3 col-sm-6">
-            <div class="card"><div class="nk-ecwg nk-ecwg6"><div class="card-inner">
-              <h6 class="title">Yangi bemorlar</h6>
-              <div class="amount">{{ new_patients }}</div>
-            </div></div></div>
+            <div class="card">
+              <div class="nk-ecwg nk-ecwg6">
+                <div class="card-inner">
+                  <h6 class="title">Yangi bemorlar</h6>
+                  <div class="amount">{{ new_patients }}</div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- O‘tkazilgan dorilar -->
+          <div class="col-xxl-3 col-sm-6">
+            <div class="card">
+              <div class="nk-ecwg nk-ecwg6">
+                <div class="card-inner">
+                  <h6 class="title">Boshqa joyga o‘tkazilgan dorilar</h6>
+                  <div class="amount">{{ transferred }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
       {% endif %}

@@ -15,7 +15,6 @@ class CustomUserAdmin(UserAdmin):
     def get_places(self, obj):
         return ", ".join([p.name for p in obj.place.all()])
 
-
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Medicine)
 admin.site.register(MedicineHistory)

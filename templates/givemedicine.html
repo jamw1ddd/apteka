@@ -24,7 +24,6 @@
                                             <input type="text" class="form-control" id="name" name="name" required placeholder="Dori nomi">
                                         </div>
                                     </div>
-
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
                                             <label class="form-label" for="category">Kategoriya</label>
@@ -37,33 +36,29 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
                                             <label class="form-label" for="price">Narxi</label>
                                             <input type="number" class="form-control" id="price" name="price" step="0.01" required placeholder="Narxi">
                                         </div>
                                     </div>
-
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
                                             <label class="form-label" for="quantity">Nechta (quti)</label>
                                             <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
                                         </div>
                                     </div>
-
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
-                                            <label class="form-label" for="employee">Hodimni tanlang</label>
-                                            <select class="form-select js-select2" id="employee" name="employee" required>
-                                                <option value="">Hodimni tanlang</option>
-                                                {% for user in users %}
-                                                    <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                                            <label class="form-label" for="place">Joyni tanlang</label>
+                                            <select class="form-select js-select2" id="place" name="place" required>
+                                                <option value="">Joyni tanlang</option>
+                                                {% for place in places %}
+                                                    <option value="{{ place.id }}">{{ place.name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="col-12">
                                         <div class="form-group">
                                             <button type="submit" class="btn btn-primary">Tasdiqlash</button>

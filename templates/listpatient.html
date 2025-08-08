@@ -40,9 +40,10 @@
                                                 </div>
                                                 <div class="user-info">
                                                     <span class="tb-lead">{{ patient.name }} {{ patient.surname }}</span>
-                                                      <a href="{% url 'patient_invoice' patient.pk %}">
-                                                        <em class="icon ni ni-eye"></em><span>Ko‘rish</span>
-                                                    </a>
+                                                        <a href="{% url 'list_invoices' patient.id %}">
+                                                            <em class="icon ni ni-eye"></em>
+                                                            <span>Ko‘rish</span>
+                                                        </a>
                                                 </div>
                                             </div>
                                         </div>

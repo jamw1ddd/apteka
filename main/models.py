@@ -27,7 +27,7 @@ class Medicine(models.Model):
     ('vitamin', 'Vitamin'),
     ('inhaler', 'Ingalator'),
     ]
-
+    
     name = models.CharField(max_length=100)
     generic_name = models.CharField(max_length=100)
     weight = models.CharField(max_length=50,blank=True, null=True)
@@ -35,8 +35,9 @@ class Medicine(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.IntegerField()
     expiry_date = models.DateField(blank=True, null=True)
-    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE,null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -52,6 +53,7 @@ class MedicineHistory(models.Model):
     to_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True, related_name='received_medicine')  # agar chiqarilgan bo‘lsa
     quantity = models.IntegerField()
     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    to_place = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -63,6 +65,7 @@ class Patient(models.Model):
     surname = models.CharField(max_length=100)
     phone = models.CharField(max_length=20)
     address = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return f"{self.name} {self.surname}"
@@ -74,6 +77,7 @@ class PatientMedicine(models.Model):
     quantity = models.PositiveIntegerField()
     prescribed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     date = models.DateTimeField(auto_now_add=True)
+    
 
     @property
     def total_price(self):
@@ -81,3 +85,4 @@ class PatientMedicine(models.Model):
     
     def __str__(self):
         return f"{self.patient.name}"
+    

@@ -76,3 +76,28 @@
 </body>
 
 </html>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggle = document.querySelector('.passcode-switch');
+        const targetId = toggle.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        const iconShow = toggle.querySelector('.icon-show');
+        const iconHide = toggle.querySelector('.icon-hide');
+
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconShow.style.display = 'none';
+                iconHide.style.display = 'inline';
+            } else {
+                input.type = 'password';
+                iconShow.style.display = 'inline';
+                iconHide.style.display = 'none';
+            }
+        });
+
+        // Dastlab ikonalarni sozlash
+        iconHide.style.display = 'none';
+    });
+</script>

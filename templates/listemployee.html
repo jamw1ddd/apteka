@@ -58,9 +58,11 @@
                                         <div class="nk-tb-col tb-col-md"><span class="fw-medium">{% for place in staff.place.all %}{{ place.name }} {% endfor %}</span></div>
                                         <div class="nk-tb-col tb-col-md"><span>{{ staff.phone }}</span></div>
                                         <div class="nk-tb-col tb-col-lg"><span>{{ staff.who }}</span></div>
+                                        {%for place in staff.place.all %}
                                         <div class="nk-tb-col tb-col-sm">
-                                            <a href="{% url 'user_medicines' staff.id %}" class="btn btn-sm btn-primary">Zahirani Ko'rish</a>
+                                            <a href="{% url 'place_medicines' place.id %}" class="btn btn-sm btn-primary">Zahirani Ko'rish</a>
                                         </div>
+                                        {% endfor %}
                                         <div class="nk-tb-col tb-col-md"></div>
                                         <div class="nk-tb-col nk-tb-col-tools">
                                             <!-- optional actions -->

@@ -1,103 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Joylarga biriktirilgan dori ro'yxati</h2>
 
-<div class="nk-content ">
-    <div class="container-fluid">
-        <div class="nk-content-inner">
-            <div class="nk-content-body">
-                <div class="nk-block-head nk-block-head-sm">
-                    <div class="nk-block-between">
-                        <div class="nk-block-head-content">
-                            <h3 class="nk-block-title page-title">Hodimlar Ro'yxati</h3>
-                            <div class="nk-block-des text-soft">
-                                <p>Sizning korxonangizda {{ staff_members|length }} ta hodim bor</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="nk-block">
-                    <div class="card card-bordered card-stretch">
-                        <div class="card-inner-group">
-                            <div class="card-inner p-0">
-                                <div class="nk-tb-list nk-tb-ulist">
-                                    <div class="nk-tb-item nk-tb-head">
-                                        <div class="nk-tb-col nk-tb-col-check"></div>
-                                        <div class="nk-tb-col"><span class="sub-text">Hodim</span></div>
-                                        <div class="nk-tb-col tb-col-md"><span class="sub-text">Joyi</span></div>
-                                        <div class="nk-tb-col tb-col-md"><span class="sub-text">Telefon raqami</span></div>
-                                        <div class="nk-tb-col tb-col-lg"><span class="sub-text">Lavozimi</span></div>
-                                        <div class="nk-tb-col tb-col-sm"><span class="sub-text">Batafsil</span></div>
-                                        <div class="nk-tb-col tb-col-md"></div>
-                                        <div class="nk-tb-col nk-tb-col-tools"></div>
-                                    </div>
-
-                                    {% for staff in staff_members %}
-                                    <div class="nk-tb-item">
-                                        <div class="nk-tb-col nk-tb-col-check">
-                                            <div class="custom-control custom-control-sm custom-checkbox notext">
-                                                <input type="checkbox" class="custom-control-input" id="uid{{ staff.id }}">
-                                            </div>
-                                        </div>
-                                        <div class="nk-tb-col">
-                                            <a href="#">
-                                                <div class="user-card">
-                                                    <div class="user-avatar bg-primary-dim">
-                                                        <span>{{ staff.first_name|default:"" |slice:":1" }}{{ staff.last_name|default:""|slice:":1" }}</span>
-                                                    </div>
-                                                    <div class="user-info">
-                                                        <span class="tb-lead">{{ staff.get_full_name }} <span class="dot dot-warning d-md-none ms-1"></span></span>
-                                                        <span>{{ staff.email }}</span>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="nk-tb-col tb-col-md">
-                                            <a href="#"><span class="fw-medium">{% for place in staff.place.all %}{{ place.name }} {% endfor %}</span></a>
-                                        </div>
-                                        <div class="nk-tb-col tb-col-md">
-                                            <span>{{ staff.phone }}</span>
-                                        </div>
-                                        <div class="nk-tb-col tb-col-lg">
-                                            <div><span>{{ staff.who }}</span></div>
-                                        </div>
-                                        <div class="nk-tb-col tb-col-sm">
-                                            <a href="{% url 'user_medicines' staff.id %}" class="btn btn-sm btn-primary">Zahirani Ko'rish</a>
-                                        </div>
-                                        <div class="nk-tb-col tb-col-md"></div>
-                                        <div class="nk-tb-col nk-tb-col-tools">
-                                            <ul class="nk-tb-actions gx-1">
-                                                <li>
-                                                    <div class="drodown">
-                                                        <a href="#" class="dropdown-toggle btn btn-icon btn-trigger" data-bs-toggle="dropdown">
-                                                            <em class="icon ni ni-more-h"></em>
-                                                        </a>
-                                                        <div class="dropdown-menu dropdown-menu-end">
-                                                            <ul class="link-list-opt no-bdr">
-                                                                <li><a href="#"><em class="icon ni ni-edit"></em><span>O'zgartirish</span></a></li>
-                                                                <li><a data-bs-toggle="modal" href="#modalDelete"><em class="icon ni ni-trash"></em><span>O'chirish</span></a></li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    {% empty %}
-                                    <div class="nk-tb-item">
-                                        <div class="nk-tb-col">
-                                            <span>Hech qanday hodim topilmadi.</span>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    {% for block in place_medicines %}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ block.place.name }} joyidagi dorilar</h5>
+            </div>
+            <div class="card-body">
+                {% if block.medicines %}
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Nomi</th>
+                                <th>Kategoriya</th>
+                                <th>Soni</th>
+                                <th>Narxi</th>
+                                <th>Muddati</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in block.medicines %}
+                            <tr>
+                                <td>{{ med.name }}</td>
+                                <td>{{ med.category }}</td>
+                                <td>{{ med.quantity }}</td>
+                                <td>{{ med.price }}</td>
+                                <td>{{ med.expiry_date }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted">Bu joyda dori mavjud emas.</p>
+                {% endif %}
             </div>
         </div>
-    </div>
+    {% endfor %}
 </div>
-
-{% endblock content %}
+{% endblock %}

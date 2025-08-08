@@ -39,12 +39,12 @@
                                             <input type="text" name="username" class="form-control" id="username" placeholder="Foydalanuvchi nomi" required>
                                         </div>
                                     </div>
-                                    <div class="col-xxl-3 col-md-4">
+                                    <!-- <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
                                             <label class="form-label" for="email">Email</label>
                                             <input type="email" name="email" class="form-control" id="email" placeholder="Email">
                                         </div>
-                                    </div>
+                                    </div> -->
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
                                             <label class="form-label" for="password">Parol</label>
@@ -64,7 +64,11 @@
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
                                             <label class="form-label" for="place">Bo‘lim (place)</label>
-                                            <input type="text" name="place" class="form-control" id="place" placeholder="Bo‘lim nomi">
+                                            <select name="place" class="form-select js-select2">
+                                                {% for p in places %}
+                                                    <option value="{{ p.id }}">{{ p.name }}</option>
+                                                {% endfor %}
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-xxl-3 col-md-4">
