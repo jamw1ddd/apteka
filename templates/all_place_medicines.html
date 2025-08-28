@@ -15,8 +15,7 @@
                     <thead>
                         <tr>
                             <th>Dori nomi</th>
-                            <th>Umumiy nomi</th>
-                            <th>Og'irlik</th>
+                            <th>Do'zasi</th>
                             <th>Kategoriya</th>
                             <th>Narxi</th>
                             <th>Miqdori</th>
@@ -27,7 +26,6 @@
                         {% for med in place.medicine_set.all %}
                         <tr>
                             <td>{{ med.name }}</td>
-                            <td>{{ med.generic_name }}</td>
                             <td>{{ med.weight }}</td>
                             <td>{{ med.category }}</td>
                             <td>{{ med.price }} so'm</td>

@@ -10,12 +10,19 @@
                         <div class="nk-block-head-content">
                             <h3 class="nk-block-title page-title">Mavjud dorilar ro'yxati</h3>
                             <div class="nk-block-des text-soft">
-                                <p>Quyida siz kiritgan dori-darmonlar ro'yxati keltirilgan.</p>
+                                <p>Quyida umumiy kiritilgan dori-darmonlar ro'yxati keltirilgan.</p>
                             </div>
                         </div>
+                        {%if user.role == 'admin'%}
                         <div class="nk-block-head-content">
                             <a href="{% url 'all_places_medicines' %}" class="btn btn-primary"><em class="icon ni ni-plus"></em><span>Boshqa joydagi dorilarni ko'rish</span></a>
                         </div>
+                        {% endif %}
+                        {%if user.role != 'admin'%}
+                        <div class="nk-block-head-content">
+                            <a href="{% url 'addmedicine' %}" class="btn btn-primary"><em class="icon ni ni-plus"></em><span>Dori qo'shish</span></a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -27,17 +34,18 @@
                                 <div class="nk-tb-list">
                                     <div class="nk-tb-item nk-tb-head">
                                         <div class="nk-tb-col"><span>Dori nomi</span></div>
-                                        <div class="nk-tb-col"><span>Umumiy nomi</span></div>
-                                        <div class="nk-tb-col"><span>Og'irlik</span></div>
+                                        {% comment %} <div class="nk-tb-col"><span>Umumiy nomi</span></div> {% endcomment %}
+                                        <div class="nk-tb-col"><span>Do'zasi</span></div>
                                         <div class="nk-tb-col"><span>Kategoriya</span></div>
                                         <div class="nk-tb-col"><span>Narxi</span></div>
                                         <div class="nk-tb-col"><span>Ombor (quti)</span></div>
                                         <div class="nk-tb-col"><span>Amal muddati</span></div>
+                                        <div class="nk-tb-col text-end"><span>Harakatlar</span></div>
                                     </div>
                                     {% for med in medicines %}
                                     <div class="nk-tb-item">
                                         <div class="nk-tb-col">{{ med.name }}</div>
-                                        <div class="nk-tb-col">{{ med.generic_name }}</div>
+                                        {% comment %} <div class="nk-tb-col">{{ med.generic_name }}</div> {% endcomment %}
                                         <div class="nk-tb-col">{{ med.weight }}</div>
                                         <div class="nk-tb-col">{{ med.category }}</div>
                                         <div class="nk-tb-col">{{ med.price }} so'm</div>
@@ -48,6 +56,11 @@
                                             {% else %}
                                                 —
                                             {% endif %}
+                                        </div>
+                                        <div class="nk-tb-col text-end">
+                                            <a href="{% url 'medicine_update' med.id %}" class="btn btn-sm btn-success btn-update-green">
+                                                <em class="icon ni ni-edit"></em> O‘zgartirish
+                                            </a>
                                         </div>
                                     </div>
                                     {% endfor %}

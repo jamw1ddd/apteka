@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import (add_staff, allplaces_medicine_list_view, employeeview, give_medicine_to_patient_view, list_invoices, 
-                    medicine_by_place_view, patient_invoice_view, patient_invoice_view_by_date, 
-                    transfer_medicine_view, employee_list,login_view,stats_view, 
+from .views import (add_staff, allplaces_medicine_list_view, employeeview, give_medicine_to_patient_view, 
+                    list_invoices, medicine_by_place_view, medicine_update, patient_invoice_view, 
+                    patient_invoice_view_by_date, transfer_medicine_view, employee_list,login_view,stats_view, 
                     doctorview,add_medicine_view,medicine_list_view,logout_view,list_patients, add_patient,
                     medicine_history_view, place_medicine_list_view,delete_patient
                     )
@@ -14,6 +14,7 @@ urlpatterns = [
     path('medicine/add/', add_medicine_view, name='addmedicine'),
     path('medicine/list/', medicine_list_view, name='listmedicine'),
     path('medicine/transfer/', transfer_medicine_view, name='givemedicine'),
+    path('medicine/<int:pk>/edit/', medicine_update, name='medicine_update'),
     path('add-staff/', add_staff, name='add_staff'),
     path('employee/', employee_list, name='employee_list'),
     path('employeeview/', employeeview, name='employee'),

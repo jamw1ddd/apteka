@@ -18,6 +18,7 @@
                                 <th>Soni</th>
                                 <th>Narxi</th>
                                 <th>Muddati</th>
+                                <th>Amallar</th> <!-- Qo‘shildi -->
                             </tr>
                         </thead>
                         <tbody>
@@ -28,6 +29,12 @@
                                 <td>{{ med.quantity }}</td>
                                 <td>{{ med.price }}</td>
                                 <td>{{ med.expiry_date }}</td>
+                                <td>
+                                    <a href="{% url 'medicine_update' med.id %}" 
+                                       class="btn btn-sm btn-success btn-update-green">
+                                        <em class="icon ni ni-edit"></em> O‘zgartirish
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

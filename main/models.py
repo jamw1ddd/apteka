@@ -29,7 +29,7 @@ class Medicine(models.Model):
     ]
     
     name = models.CharField(max_length=100)
-    generic_name = models.CharField(max_length=100)
+    generic_name = models.CharField(max_length=100,blank=True, null=True)
     weight = models.CharField(max_length=50,blank=True, null=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -42,24 +42,6 @@ class Medicine(models.Model):
     def __str__(self):
         return self.name
     
-    
-class MedicineHistory(models.Model):
-    ACTION_CHOICES = (
-        ('added', 'Qo‘shildi'),
-        ('transferred', 'Chiqarildi'),
-    )
-    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # kim amalga oshirgan
-    to_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True, related_name='received_medicine')  # agar chiqarilgan bo‘lsa
-    quantity = models.IntegerField()
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
-    to_place = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.get_action_display()} - {self.medicine.name} ({self.quantity})"
-    
-
 class Patient(models.Model):
     name = models.CharField(max_length=100)
     surname = models.CharField(max_length=100)
@@ -70,6 +52,23 @@ class Patient(models.Model):
     def __str__(self):
         return f"{self.name} {self.surname}"
     
+class MedicineHistory(models.Model):
+    ACTION_CHOICES = (
+        ('added', 'Qo‘shildi'),
+        ('transferred', 'Chiqarildi'),
+    )
+    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # kim amalga oshirgan
+    to_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True, related_name='received_medicine')
+    to_patient = models.ForeignKey(Patient, on_delete=models.CASCADE, blank=True, null=True, related_name="received_medicines")  # CustomUser emas # agar chiqarilgan bo‘lsa
+    quantity = models.IntegerField()
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    to_place = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_action_display()} - {self.medicine.name} ({self.quantity})"
+    
 
 class PatientMedicine(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
@@ -77,7 +76,6 @@ class PatientMedicine(models.Model):
     quantity = models.PositiveIntegerField()
     prescribed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     date = models.DateTimeField(auto_now_add=True)
-    
 
     @property
     def total_price(self):

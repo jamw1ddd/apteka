@@ -59,3 +59,22 @@ button {
 button:hover {
     background-color: #45a049;
 }
+
+/* Button uchun maxsus to‘q yashil */
+.btn-update-green.btn,
+.btn-update-green.btn-sm,
+.btn-update-green.btn-success {
+    background-color: #025f02 !important;  /* to‘q yashil */
+    border-color: #004d00 !important;
+    color: #fff !important;                /* matn oq bo‘lsin */
+}
+
+/* Hover va focus */
+.btn-update-green.btn:hover,
+.btn-update-green.btn:focus,
+.btn-update-green.btn:active {
+    background-color: #004d00 !important;  /* hover paytida to‘qroq */
+    border-color: #004d00 !important;
+    color: #fff !important;
+}
+

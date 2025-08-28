@@ -1,7 +1,6 @@
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from main import models
 from main.models import Medicine, CustomUser, MedicineHistory, Patient, PatientMedicine, Place
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -16,26 +15,33 @@ from django.db.models.functions import TruncMinute
 def stats_view(request):
     start_str = request.GET.get('start_date')
     end_str = request.GET.get('end_date')
-    period = request.GET.get('period')
+    period = request.GET.get('period') or '30'
     today = datetime.today().date()
 
-    try:
-        if start_str and end_str:
-            start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
-            end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
-        elif period == '7':
-            end_date = today
+    # 🔹 Avval period tekshiriladi, faqat sana kiritilmagan bo‘lsa
+    if period in ['7', '1', '30'] and not (start_str and end_str):
+        if period == '7':
             start_date = today - timedelta(days=7)
+            end_date = today
         elif period == '1':
             start_date = end_date = today
-        else:
-            end_date = today
+        else:  # default 30 kun
             start_date = today - timedelta(days=30)
-    except (ValueError, TypeError):
-        end_date = today
+            end_date = today
+    elif start_str and end_str:
+        # 🔹 Agar foydalanuvchi sana tanlagan bo‘lsa
+        try:
+            start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            start_date = today - timedelta(days=30)
+            end_date = today
+    else:
+        # 🔹 Default 30 kun
         start_date = today - timedelta(days=30)
+        end_date = today
 
-    # Statistika hisoblash
+    # 🔹 Statistikalar
     incoming = Medicine.objects.filter(
         created_at__date__range=(start_date, end_date)
     ).aggregate(total=Sum('quantity'))['total'] or 0
@@ -57,6 +63,10 @@ def stats_view(request):
         created_at__date__range=(start_date, end_date)
     ).count()
 
+    history = MedicineHistory.objects.filter(
+        created_at__date__range=(start_date, end_date)
+    ).select_related('medicine', 'user', 'to_user', 'to_place').order_by('-created_at')
+
     context = {
         'incoming': incoming,
         'used': used,
@@ -65,10 +75,11 @@ def stats_view(request):
         'new_patients': new_patients,
         'start_date': start_date,
         'end_date': end_date,
-        'period': period or '30'
+        'period': period,
+        'history': history
     }
-
     return render(request, 'admindashboard.html', context)
+
 
 @login_required
 def doctorview(request):
@@ -89,7 +100,6 @@ def doctorview(request):
                     places.append(extra_place)
     else:
         places = Place.objects.all()
-
     # Har bir place uchun tegishli dorilarni yig'amiz
     place_medicines = []
     for place in places:
@@ -105,29 +115,24 @@ def doctorview(request):
 def add_medicine_view(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        generic_name = request.POST.get('generic_name')
         weight = request.POST.get('weight')
         category = request.POST.get('category')
         price = request.POST.get('price')
         quantity = request.POST.get('quantity')
         expiry_date = request.POST.get('expiry_date')
         # Hamma required maydonlar to‘ldirilganini tekshiramiz
-        if not all([name, generic_name, category, price, quantity]):
-            messages.error(request, "Iltimos, kerakli maydonlarni to‘ldiring.")
+        if not all([name, category, price, quantity]):
             return render(request, 'addmedicine.html')
 
         medicine = Medicine.objects.create(
             name=name,
-            generic_name=generic_name,
             weight=weight,
             category=category,
             price=price,
             quantity=quantity,
             expiry_date=expiry_date or None,
             owner=request.user,
-        )
-
-        # Tarixga yozish        
+        )     
         MedicineHistory.objects.create(
             medicine=medicine,
             user=request.user,
@@ -135,8 +140,7 @@ def add_medicine_view(request):
             action='added'
         )
 
-        messages.success(request, "Dori muvaffaqiyatli qo‘shildi.")
-        return redirect('listmedicine')  # Bu sizdagi dori ro‘yxati sahifasi nomi bo‘lishi kerak
+        return redirect('listmedicine')
 
     return render(request, 'addmedicine.html')
 
@@ -155,7 +159,6 @@ def place_medicine_list_view(request, place_id):
 def allplaces_medicine_list_view(request):
     if request.user.role != 'admin':
         return HttpResponseForbidden("Faqat admin foydalanuvchilar kirishi mumkin.")
-
     # Barcha joylar va har bir joy uchun dorilarni ajratib chiqaramiz
     places = Place.objects.all().prefetch_related('medicine_set')
 
@@ -236,12 +239,10 @@ def transfer_medicine_view(request):
             )
 
         place_medicine.save()
-
         # Ombordan chiqariladi
         admin_medicine.quantity -= quantity
         admin_medicine.save()
 
-        # Tarixga yoziladi
         MedicineHistory.objects.create(
             medicine=admin_medicine,
             user=request.user,
@@ -262,6 +263,7 @@ def medicine_history_view(request):
 
 User = get_user_model()
 
+@login_required
 def add_staff(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -418,9 +420,9 @@ def give_medicine_to_patient_view(request):
             MedicineHistory.objects.create(
                 medicine=medicine,
                 user=request.user,
-                to_user=None,
+                to_patient=patient,
                 quantity=quantity,
-                action='given to patient'
+                action='Bemorga chiqarildi',
             )
 
         return redirect('patient_invoice_view_by_date', patient_id=patient.id,
@@ -462,7 +464,7 @@ def patient_invoice_view(request, patient_id):
 def delete_patient(request, pk):
     patient = get_object_or_404(Patient, pk=pk)
     patient.delete()
-    messages.success(request, "Bemor muvaffaqiyatli o‘chirildi.")
+    #messages.success(request, "Bemor muvaffaqiyatli o‘chirildi.")
     return redirect('list_patients') 
 
 @login_required
@@ -473,10 +475,8 @@ def medicine_by_place_view(request):
     for place in places:
         # Ushbu joyga biriktirilgan foydalanuvchilar (rahbarlar)
         leaders = CustomUser.objects.filter(place=place)
-
         # Ushbu joy uchun dorilarni topamiz
         medicines = Medicine.objects.filter(owner__place=place)
-
         data.append({
             'place': place,
             'leaders': leaders,
@@ -484,7 +484,6 @@ def medicine_by_place_view(request):
         })
 
     return render(request, 'medicine_by_place.html', {'data': data})
-
 
 @login_required
 def list_invoices(request, patient_id):
@@ -546,3 +545,26 @@ def patient_invoice_view_by_date(request, patient_id, date_str):
         'prescribed_by': prescribed_by,
     }
     return render(request, 'patient_detail.html', context)
+
+@login_required
+def medicine_update(request, pk):
+    medicine = get_object_or_404(Medicine, pk=pk)
+
+    if request.method == 'POST':
+        medicine.name = request.POST.get('name')
+        medicine.generic_name = request.POST.get('generic_name')
+        medicine.weight = request.POST.get('weight')
+        medicine.category = request.POST.get('category')
+        medicine.price = request.POST.get('price')
+        medicine.quantity = request.POST.get('quantity')
+        expiry_date = request.POST.get('expiry_date')
+
+        medicine.expiry_date = expiry_date if expiry_date else None
+        medicine.save()
+
+        return redirect('listmedicine')
+
+    return render(request, 'medicine_edit.html', {
+        'medicine': medicine,
+        'categories': Medicine.CATEGORY_CHOICES
+    })
