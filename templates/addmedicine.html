@@ -28,13 +28,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- <div class="col-xxl-3 col-md-4">
-                                        <div class="form-group">
-                                            <label class="form-label" for="generic_name">Umumiy nomi</label>
-                                            <input type="text" class="form-control" id="generic_name" name="generic_name" placeholder="Umumiy nomi">
-                                        </div>
-                                    </div> -->
-
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
                                             <label class="form-label" for="weight">Do'zasi</label>
@@ -45,8 +38,8 @@
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
                                             <label class="form-label" for="category">Kategoriya</label>
-                                            <select class="form-select js-select2" id="category" name="category" required>
-                                                <option value="">Tanlang</option>
+                                            <select class="form-select js-select2" id="category" name="category">
+                                                <option value="---">---</option>
                                                 <option value="tablet">Tabletkalar</option>
                                                 <option value="syrup">Sirop</option>
                                                 <option value="vitamin">Vitamin</option>
@@ -57,14 +50,21 @@
 
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
-                                            <label class="form-label" for="price">Narxi</label>
-                                            <input type="number" step="0.01" class="form-control" id="price" name="price" placeholder="Narxi" required>
+                                            <label class="form-label" for="price">Quti narxi</label>
+                                            <input type="number" step="0.01" class="form-control" id="price" name="price" placeholder="Quti narxi" required>
                                         </div>
                                     </div>
 
                                     <div class="col-xxl-3 col-md-4">
                                         <div class="form-group">
-                                            <label class="form-label" for="quantity">Zaxira (quti)</label>
+                                            <label class="form-label" for="box_quantity">Qutidagi dona soni</label>
+                                            <input type="number" class="form-control" id="box_quantity" name="box_quantity" min="1" value="1" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xxl-3 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quantity">Omborda qancha quti</label>
                                             <input type="number" class="form-control" id="quantity" name="quantity" min="0" required>
                                         </div>
                                     </div>
@@ -86,6 +86,7 @@
                         </div>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>

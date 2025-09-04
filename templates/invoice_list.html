@@ -31,7 +31,7 @@
                                                 <td>{{ forloop.counter }}</td>
                                                 <td>{{ inv.chek_sana|date:"d-m-Y H:i" }}</td>
                                                 <td>{{ inv.items_count }}</td>
-                                                <td>{{ inv.total }} so'm</td>
+                                                <td>{{ inv.total|floatformat:2 }}</td>
                                                 <td>
                                                     <a href="{% url 'patient_invoice_view_by_date' patient.id inv.date_str %}" class="btn btn-success">
                                                         Ko‘rish

@@ -95,9 +95,9 @@
                                                     <tr>
                                                         <td>{{ item.medicine.id }}</td>
                                                         <td>{{ item.medicine.name }}</td>
-                                                        <td>{{ item.medicine.price }}</td>
-                                                        <td>{{ item.quantity }}</td>
-                                                        <td>{{ item.total_price }}</td>
+                                                        <td>{{ item.unit_price }}</td>
+                                                        <td>{{ item.display_quantity }}</td>
+                                                        <td>{{ item.total_price|floatformat:2 }}</td>
                                                     </tr>
                                                 {% endfor %}
                                             {% else %}
@@ -110,7 +110,7 @@
                                             <tr>
                                                 <td colspan="2"></td>
                                                 <td colspan="2"><strong>Umumiy</strong></td>
-                                                <td><strong>{{ total }}So'm</strong></td>
+                                                <td><strong>{{ total }} So'm</strong></td>
                                             </tr>
                                         </tfoot>
                                     </table>

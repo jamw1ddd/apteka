@@ -15,23 +15,31 @@
                             <tr>
                                 <th>Nomi</th>
                                 <th>Kategoriya</th>
-                                <th>Soni</th>
-                                <th>Narxi</th>
+                                <th>Miqdori</th>
+                                <th>Quti narxi</th>
+                                <th>1 dona narxi</th>
                                 <th>Muddati</th>
-                                <th>Amallar</th> <!-- Qo‘shildi -->
+                                <th>Amallar</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for med in block.medicines %}
                             <tr>
                                 <td>{{ med.name }}</td>
-                                <td>{{ med.category }}</td>
-                                <td>{{ med.quantity }}</td>
-                                <td>{{ med.price }}</td>
-                                <td>{{ med.expiry_date }}</td>
+                                <td>{{ med.get_category_display }}</td>
+                                <td>{{ med.remaining_display }}</td>
+                                <td>{{ med.price|floatformat:0 }} so'm</td>
+                                <td>
+                                    {% if med.box_quantity > 1 %}
+                                        {{ med.unit_price|floatformat:0 }} so'm
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>{{ med.expiry_date|date:"d.m.Y"|default:"—" }}</td>
                                 <td>
                                     <a href="{% url 'medicine_update' med.id %}" 
-                                       class="btn btn-sm btn-success btn-update-green">
+                                       class="btn btn-sm btn-success">
                                         <em class="icon ni ni-edit"></em> O‘zgartirish
                                     </a>
                                 </td>

@@ -1,23 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container-fluid">
-    <h3 class="mb-4">Barcha joylardagi dorilar ro'yxati (admin uchun)</h3>
+    <h3 class="mb-4">📦 Barcha joylardagi dorilar ro'yxati (Admin uchun)</h3>
 
     {% for place in places %}
-    <div class="card card-bordered mb-5">
+    <div class="card card-bordered mb-5 shadow-sm">
         <div class="card-header bg-light">
-            <h5 class="card-title">{{ place.name }} — dorilar</h5>
+            <h5 class="card-title mb-0">{{ place.name }} — dorilar</h5>
         </div>
         <div class="card-body">
-            {% if place.medicine_set.all %}
+            {% if place.medicine_set.exists %}
             <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
+                <table class="table table-striped table-bordered">
+                    <thead class="table-light">
                         <tr>
+                            <th>#</th>
                             <th>Dori nomi</th>
                             <th>Do'zasi</th>
                             <th>Kategoriya</th>
-                            <th>Narxi</th>
+                            <th>Quti narxi</th>
+                            <th>1 dona narxi</th>
                             <th>Miqdori</th>
                             <th>Amal muddati</th>
                         </tr>
@@ -25,25 +27,29 @@
                     <tbody>
                         {% for med in place.medicine_set.all %}
                         <tr>
+                            <td>{{ forloop.counter }}</td>
                             <td>{{ med.name }}</td>
-                            <td>{{ med.weight }}</td>
-                            <td>{{ med.category }}</td>
-                            <td>{{ med.price }} so'm</td>
-                            <td>{{ med.quantity }}</td>
+                            <td>{{ med.weight|default:"—" }}</td>
+                            <td>{{ med.get_category_display }}</td>
+                            <td>{{ med.price|floatformat:0 }} so'm</td>
                             <td>
-                                {% if med.expiry_date %}
-                                    {{ med.expiry_date }}
+                                {% if med.box_quantity > 1 %}
+                                    {{ med.unit_price|floatformat:0 }} so'm
                                 {% else %}
                                     —
                                 {% endif %}
                             </td>
+                            <td>
+                                {{ med.remaining_display }}
+                            </td>
+                            <td>{{ med.expiry_date|date:"d.m.Y"|default:"—" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-                <p class="text-muted">Bu joyga hech qanday dori qo‘shilmagan.</p>
+                <p class="text-muted">📭 Bu joyga hech qanday dori qo‘shilmagan.</p>
             {% endif %}
         </div>
     </div>

@@ -2,14 +2,14 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from main.models import Medicine, CustomUser, MedicineHistory, Patient, PatientMedicine, Place
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib import messages
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 from decimal import Decimal
 from datetime import timedelta,datetime
-from django.db.models import Sum,Count
+from django.db.models import Sum,Count,DecimalField,ExpressionWrapper, IntegerField,F
 from django.db.models.functions import TruncMinute
+from django.db import transaction
 
 @login_required
 def stats_view(request):
@@ -17,7 +17,6 @@ def stats_view(request):
     end_str = request.GET.get('end_date')
     period = request.GET.get('period') or '30'
     today = datetime.today().date()
-
     # 🔹 Avval period tekshiriladi, faqat sana kiritilmagan bo‘lsa
     if period in ['7', '1', '30'] and not (start_str and end_str):
         if period == '7':
@@ -40,33 +39,31 @@ def stats_view(request):
         # 🔹 Default 30 kun
         start_date = today - timedelta(days=30)
         end_date = today
-
     # 🔹 Statistikalar
     incoming = Medicine.objects.filter(
         created_at__date__range=(start_date, end_date)
     ).aggregate(total=Sum('quantity'))['total'] or 0
-
     used = PatientMedicine.objects.filter(
         date__date__range=(start_date, end_date)
-    ).aggregate(total=Sum('quantity'))['total'] or 0
-
+    ).annotate(
+        total_quantity=ExpressionWrapper(
+            F('boxes_given') * F('medicine__box_quantity') + F('units_given'),
+            output_field=IntegerField()
+        )
+    ).aggregate(total=Sum('total_quantity'))['total'] or 0
     transferred = MedicineHistory.objects.filter(
         action='transferred',
         created_at__date__range=(start_date, end_date)
     ).aggregate(total=Sum('quantity'))['total'] or 0
-
     remaining = Medicine.objects.aggregate(
         total=Sum('quantity')
     )['total'] or 0
-
     new_patients = Patient.objects.filter(
         created_at__date__range=(start_date, end_date)
     ).count()
-
     history = MedicineHistory.objects.filter(
         created_at__date__range=(start_date, end_date)
     ).select_related('medicine', 'user', 'to_user', 'to_place').order_by('-created_at')
-
     context = {
         'incoming': incoming,
         'used': used,
@@ -80,25 +77,14 @@ def stats_view(request):
     }
     return render(request, 'admindashboard.html', context)
 
-
 @login_required
 def doctorview(request):
     user = request.user
     if user.role == "doctor":
-        places = list(user.place.all())  # O'z joylari
-        mapping = {
-            "1-etaj": "3-etaj",
-            "3-etaj": "1-etaj",
-            "2-etaj": "Oper",
-            "Oper": "2-etaj",
-        }
-        for place in user.place.all():
-            extra_name = mapping.get(place.name)
-            if extra_name:
-                extra_place = Place.objects.filter(name=extra_name).first()
-                if extra_place and extra_place not in places:
-                    places.append(extra_place)
+        # faqat o'z joylari
+        places = user.place.all()
     else:
+        # admin yoki boshqa rollar hamma joylarni ko'radi
         places = Place.objects.all()
     # Har bir place uchun tegishli dorilarni yig'amiz
     place_medicines = []
@@ -108,7 +94,6 @@ def doctorview(request):
             'place': place,
             'medicines': medicines
         })
-
     return render(request, 'doctor.html', {'place_medicines': place_medicines})
 
 @login_required
@@ -118,30 +103,42 @@ def add_medicine_view(request):
         weight = request.POST.get('weight')
         category = request.POST.get('category')
         price = request.POST.get('price')
-        quantity = request.POST.get('quantity')
+        box_quantity = request.POST.get('box_quantity', 1)  # qutidagi dona soni
+        quantity = request.POST.get('quantity')  # quti soni
         expiry_date = request.POST.get('expiry_date')
         # Hamma required maydonlar to‘ldirilganini tekshiramiz
-        if not all([name, category, price, quantity]):
-            return render(request, 'addmedicine.html')
+        if not all([name, category, price, quantity, box_quantity]):
+            return render(request, 'addmedicine.html', {
+                "error": "Hamma maydonlar to‘ldirilishi shart!"
+            })
+        # Ma'lumotlarni to'g'ri formatga o'tkazamiz
+        price = Decimal(price)
+        quantity = int(quantity)
+        box_quantity = int(box_quantity)
 
+        if expiry_date:
+            expiry_date = datetime.strptime(expiry_date, "%Y-%m-%d").date()
+        else:
+            expiry_date = None
+        # Dori yaratamiz
         medicine = Medicine.objects.create(
             name=name,
             weight=weight,
             category=category,
             price=price,
-            quantity=quantity,
-            expiry_date=expiry_date or None,
+            quantity=quantity,         # omborda nechta quti
+            box_quantity=box_quantity, # qutidagi dona soni
+            expiry_date=expiry_date,
             owner=request.user,
-        )     
+        )
+        # Tarixga yozamiz
         MedicineHistory.objects.create(
             medicine=medicine,
             user=request.user,
             quantity=quantity,
             action='added'
         )
-
         return redirect('listmedicine')
-
     return render(request, 'addmedicine.html')
 
 @login_required
@@ -161,7 +158,6 @@ def allplaces_medicine_list_view(request):
         return HttpResponseForbidden("Faqat admin foydalanuvchilar kirishi mumkin.")
     # Barcha joylar va har bir joy uchun dorilarni ajratib chiqaramiz
     places = Place.objects.all().prefetch_related('medicine_set')
-
     return render(request, 'all_place_medicines.html', {
         'places': places
     })
@@ -170,91 +166,96 @@ def allplaces_medicine_list_view(request):
 def transfer_medicine_view(request):
     places = Place.objects.all()
     user_role = request.user.role
-
     if user_role not in ['admin', 'staff']:
         messages.error(request, "Sizda dori chiqarishga ruxsat yo'q.")
         return redirect('givemedicine')
-
-    if user_role == 'admin':
-        users = CustomUser.objects.filter(role='staff').exclude(username__in=['admin', 'jamw1ddd'])
-    elif user_role == 'staff':
-        users = CustomUser.objects.filter(role='doctor').exclude(username__in=['admin', 'jamw1ddd'])
-    else:
-        users = []
-
     if request.method == 'POST':
         medicine_name = request.POST.get('name', '').strip()
-        category = request.POST.get('category')
+        sale_type = request.POST.get('sale_type')  # 'unit' yoki 'box'
         try:
             quantity = int(request.POST.get('quantity'))
-            price = float(request.POST.get('price'))
+            if quantity <= 0:
+                raise ValueError
         except (ValueError, TypeError):
-            messages.error(request, "Noto‘g‘ri miqdor yoki narx kiritildi.")
+            messages.error(request, "Noto‘g‘ri miqdor kiritildi.")
             return redirect('givemedicine')
-
         place_id = request.POST.get('place')
         place = get_object_or_404(Place, id=place_id)
-
-        if quantity <= 0 or price <= 0:
-            messages.error(request, "Miqdor va narx musbat bo‘lishi kerak.")
-            return redirect('givemedicine')
-
-        # Omborda dori mavjudligini tekshiramiz
+        # Ombordagi dori (admin ombor = place is null)
         admin_medicine = Medicine.objects.filter(
-            name__iexact=medicine_name.strip(),
-            category=category,
-            place__isnull=True  # omborda bo‘lgan
+            name__iexact=medicine_name,
+            place__isnull=True
         ).first()
-
         if not admin_medicine:
             messages.error(request, f"{medicine_name} nomli dori topilmadi.")
             return redirect('givemedicine')
-
-        if admin_medicine.quantity < quantity:
+        # jami dona omborda
+        admin_total_units = admin_medicine.total_units
+        # qancha dona transfer qilinadi
+        if sale_type == 'box':
+            transfer_units = quantity * admin_medicine.box_quantity
+        elif sale_type == 'unit':
+            transfer_units = quantity
+        else:
+            messages.error(request, "Sotish turini tanlang (unit/box).")
+            return redirect('givemedicine')
+        if admin_total_units < transfer_units:
             messages.error(request, "Yetarli dori mavjud emas.")
             return redirect('givemedicine')
-
-        # Manzilda mavjud bo‘lgan dorini olamiz yoki yaratamiz
-        place_medicine = Medicine.objects.filter(
-            name__iexact=medicine_name,
-            category=category,
-            place=place,
-            owner=None
-        ).first()
-
-        if place_medicine:
-            place_medicine.quantity += quantity
-            place_medicine.price = price  # narx yangilanadi
-        else:
-            place_medicine = Medicine.objects.create(
-                name=medicine_name,
-                category=category,
-                generic_name=admin_medicine.generic_name,
-                weight=admin_medicine.weight,
-                price=price,
-                quantity=quantity,
-                expiry_date=admin_medicine.expiry_date,
+        # atomik blok — hamma update yoki hech narsa
+        with transaction.atomic():
+            # --- ombordan ayiramiz ---
+            new_admin_total = admin_total_units - transfer_units
+            admin_medicine.quantity = new_admin_total // admin_medicine.box_quantity
+            admin_medicine.extra_units = new_admin_total % admin_medicine.box_quantity
+            admin_medicine.save()
+            # --- manzildagi dori yangilanadi yoki yaratiladi ---
+            place_medicine = Medicine.objects.filter(
+                name__iexact=medicine_name,
                 place=place,
-                owner=None,
+                owner=None
+            ).first()
+            if place_medicine:
+                new_place_total = place_medicine.total_units + transfer_units
+                place_medicine.quantity = new_place_total // place_medicine.box_quantity
+                place_medicine.extra_units = new_place_total % place_medicine.box_quantity
+                place_medicine.save()
+            else:
+                # yangi yozuvda ham quantity va extra_units to'g'ri saqlanadi
+                place_qty = transfer_units // admin_medicine.box_quantity
+                place_extra = transfer_units % admin_medicine.box_quantity
+                place_medicine = Medicine.objects.create(
+                    name=medicine_name,
+                    category=admin_medicine.category,
+                    generic_name=admin_medicine.generic_name,
+                    weight=admin_medicine.weight,
+                    price=admin_medicine.price,
+                    quantity=place_qty,
+                    extra_units=place_extra,
+                    box_quantity=admin_medicine.box_quantity,
+                    expiry_date=admin_medicine.expiry_date,
+                    place=place,
+                    owner=None,
+                )
+            if sale_type == "box":
+                action_text = "quti ko'chirildi"
+            elif sale_type == "unit":
+                action_text = "dona ko'chirildi"
+            else:
+                action_text = "ko'chirildi"
+            # Tarixga yozamiz
+            MedicineHistory.objects.create(
+                medicine=admin_medicine,
+                user=request.user,
+                to_place=place,
+                quantity=transfer_units,   # saqlashni donalarda ham qilsak ma'qul
+                action=action_text
             )
-
-        place_medicine.save()
-        # Ombordan chiqariladi
-        admin_medicine.quantity -= quantity
-        admin_medicine.save()
-
-        MedicineHistory.objects.create(
-            medicine=admin_medicine,
-            user=request.user,
-            to_place=place,
-            quantity=quantity,
-            action='transferred'
-        )
-
-        messages.success(request, f"{place.name} joyiga {quantity} ta {medicine_name} chiqarildi.")
         return redirect('listmedicine')
-
-    return render(request, 'givemedicine.html', {'users': users, 'places': places})
+    return render(request, 'givemedicine.html', {
+        'places': places,
+        'medicines': Medicine.objects.filter(place__isnull=True)
+    })
 
 @login_required
 def medicine_history_view(request):
@@ -274,7 +275,6 @@ def add_staff(request):
         role = request.POST.get('role')
         place_id = request.POST.get('place')  # Bu ID bo'lishi kerak
         who = request.POST.get('who')
-
         # Avval foydalanuvchi yaratamiz
         user = User.objects.create_user(
             username=username,
@@ -286,14 +286,11 @@ def add_staff(request):
         user.role = role
         user.who = who
         user.save()
-
         # ManyToManyField bo'lsa .set() ishlatamiz
         if place_id:
             place_obj = Place.objects.get(id=place_id)
             user.place.set([place_obj])  # ✅ ManyToManyField uchun to‘g‘ri usul
-
         return redirect('employee_list')
-
     return render(request, 'addstaff.html', {'places': Place.objects.all()})
 
 @login_required
@@ -303,14 +300,12 @@ def employee_list(request):
         users = CustomUser.objects.all().exclude(id=user.id).exclude(username__in=['admin', 'jamw1ddd'])  # Admin o‘zini ko‘rmaydi
     else:
         users = CustomUser.objects.filter(id=user.id)  # Faqat o‘zini ko‘radi
-
     return render(request, 'listemployee.html', {'users': users})
 
 @login_required
 def employeeview(request):
     user = request.user
-
-    if user.role == "staff" and user.who == "Bosh hamshira":
+    if user.role == "staff":
         places = user.place.all()  # Foydalanuvchiga biriktirilgan barcha joylar
     else:
         places = Place.objects.all()  # Adminlar uchun barcha joylar
@@ -322,7 +317,6 @@ def employeeview(request):
             'place': place,
             'medicines': medicines
         })
-
     return render(request, 'employee.html', {'place_medicines': place_medicines})
 
 @login_required
@@ -332,7 +326,6 @@ def add_patient(request):
         surname = request.POST.get('surname')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
-        
         # Create new patient
         Patient.objects.create(
             name=name,
@@ -352,11 +345,9 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            
             if user.role == 'admin':
                 return redirect('dashboard_stats')  # admin sahifa
             elif user.role == 'staff':
@@ -367,7 +358,6 @@ def login_view(request):
                 return redirect('login')  # fallback sahifa
         else:
             messages.error(request, "Login yoki parol noto‘g‘ri!")
-
     return render(request, 'login.html')
 
 def logout_view(request):
@@ -379,44 +369,54 @@ def give_medicine_to_patient_view(request):
     if request.user.role != 'doctor':
         messages.error(request, "Sizda dori yozishga ruxsat yo'q.")
         return redirect('home')
-
     user_places = request.user.place.all()
-    if user_places.count() != 1:
-        messages.error(request, "Siz faqat bitta joyga biriktirilgan bo'lishingiz kerak.")
-        return redirect('home')
-
     selected_place = user_places.first()
     patients = Patient.objects.all()
-
     if request.method == 'POST':
         patient_id = request.POST.get('patient')
         medicine_ids = request.POST.getlist('medicines')
         quantities = request.POST.getlist('quantities')
-
         patient = get_object_or_404(Patient, id=patient_id)
-
-        # 📌 Bir xil vaqt barcha yozuvlar uchun
         now_time = timezone.localtime(timezone.now())
-
         for i, med_id in enumerate(medicine_ids):
-            quantity = int(quantities[i])
+            quantity = int(quantities[i])  # jami so‘ralgan dona
             medicine = get_object_or_404(Medicine, id=med_id, place=selected_place)
-
-            if medicine.quantity < quantity:
+            # Yetarli umumiy dona borligini tekshirish
+            if medicine.total_units < quantity:
                 messages.error(request, f"{medicine.name} uchun yetarli miqdor mavjud emas.")
                 continue
-
+            # Quti va dona bo‘yicha hisoblash
+            boxes_to_deduct, remainder_units = divmod(quantity, medicine.box_quantity)
+            # Agar qutidan yechib bo‘lsa
+            if boxes_to_deduct > medicine.quantity:
+                boxes_to_deduct = medicine.quantity
+                remainder_units = quantity - boxes_to_deduct * medicine.box_quantity
+            # ➤ Bemor uchun yozib qo‘yish
             PatientMedicine.objects.create(
                 patient=patient,
                 medicine=medicine,
-                quantity=quantity,
+                boxes_given=boxes_to_deduct,
+                units_given=remainder_units,
                 prescribed_by=request.user,
-                date=now_time  # 👈 Sana qo‘lda berilmoqda
+                date=now_time
             )
-
-            medicine.quantity -= quantity
+            # ➤ Omborni yangilash
+            medicine.quantity -= boxes_to_deduct
+            if remainder_units > 0:
+                if remainder_units <= medicine.extra_units:
+                    # faqat qoldiq donalardan kamaytirish
+                    medicine.extra_units -= remainder_units
+                else:
+                    # qoldiq yetmasa -> 1 quti ochib, qoldiqni yangilash
+                    if medicine.quantity > 0:
+                        medicine.quantity -= 1
+                        needed_from_new_box = remainder_units - medicine.extra_units
+                        medicine.extra_units = medicine.box_quantity - needed_from_new_box
+                    else:
+                        messages.error(request, f"{medicine.name} uchun yetarli dona mavjud emas.")
+                        continue
             medicine.save()
-
+            # ➤ Tarixga yozish
             MedicineHistory.objects.create(
                 medicine=medicine,
                 user=request.user,
@@ -424,12 +424,12 @@ def give_medicine_to_patient_view(request):
                 quantity=quantity,
                 action='Bemorga chiqarildi',
             )
-
-        return redirect('patient_invoice_view_by_date', patient_id=patient.id,
-                        date_str=now_time.strftime("%Y-%m-%d_%H-%M"))
-
+        return redirect(
+            'patient_invoice_view_by_date',
+            patient_id=patient.id,
+            date_str=now_time.strftime("%Y-%m-%d_%H-%M")
+        )
     medicines = Medicine.objects.filter(place=selected_place)
-
     return render(request, 'give_medicine_to_patient.html', {
         'patients': patients,
         'medicines': medicines
@@ -439,14 +439,13 @@ def give_medicine_to_patient_view(request):
 def patient_invoice_view(request, patient_id):
     patient = get_object_or_404(Patient, id=patient_id)
     prescriptions = PatientMedicine.objects.filter(patient=patient)
-    # Hisoblash uchun Decimal ishlatilmoqda
+    # jami narx
     subtotal = sum(p.total_price for p in prescriptions)
     processing_fee = Decimal("10.00")
     tax = subtotal * Decimal("0.10")
     total = subtotal #+ processing_fee + tax
     first_prescription = prescriptions.first()
     prescribed_by = first_prescription.prescribed_by if first_prescription else None
-
     context = {
         'patient': patient,
         'prescriptions': prescriptions,
@@ -464,14 +463,12 @@ def patient_invoice_view(request, patient_id):
 def delete_patient(request, pk):
     patient = get_object_or_404(Patient, pk=pk)
     patient.delete()
-    #messages.success(request, "Bemor muvaffaqiyatli o‘chirildi.")
     return redirect('list_patients') 
 
 @login_required
 def medicine_by_place_view(request):
     places = Place.objects.all()
     data = []
-
     for place in places:
         # Ushbu joyga biriktirilgan foydalanuvchilar (rahbarlar)
         leaders = CustomUser.objects.filter(place=place)
@@ -482,29 +479,32 @@ def medicine_by_place_view(request):
             'leaders': leaders,
             'medicines': medicines,
         })
-
     return render(request, 'medicine_by_place.html', {'data': data})
 
 @login_required
 def list_invoices(request, patient_id):
     patient = get_object_or_404(Patient, id=patient_id)
-
     invoices = (
         PatientMedicine.objects
         .filter(patient=patient)
         .annotate(chek_sana=TruncMinute('date'))
         .values('chek_sana')
         .annotate(
-            total=Sum('medicine__price'),
+            total=Sum(
+                ExpressionWrapper(
+                    # Umumiy narx: (quti * qutidagi dona + dona) * (quti narxi / qutidagi dona)
+                    (F('boxes_given') * F('medicine__box_quantity') + F('units_given'))
+                    * (F('medicine__price') / F('medicine__box_quantity')),
+                    output_field=DecimalField(max_digits=12, decimal_places=2)
+                )
+            ),
             items_count=Count('id')
         )
         .order_by('-chek_sana')
     )
-
     # datetime → string formatlash
     for inv in invoices:
         inv['date_str'] = inv['chek_sana'].strftime('%Y-%m-%d_%H-%M')
-
     return render(request, 'invoice_list.html', {
         'patient': patient,
         'invoices': invoices
@@ -513,26 +513,20 @@ def list_invoices(request, patient_id):
 @login_required
 def patient_invoice_view_by_date(request, patient_id, date_str):
     patient = get_object_or_404(Patient, id=patient_id)
-
     invoice_datetime = datetime.strptime(date_str, "%Y-%m-%d_%H-%M")
-
     start_time = invoice_datetime
     end_time = invoice_datetime + timedelta(minutes=1)
-
     prescriptions = PatientMedicine.objects.filter(
         patient=patient,
         date__gte=start_time,
         date__lt=end_time
     )
-
     subtotal = sum(p.total_price for p in prescriptions)
     processing_fee = Decimal("10.00")
     tax = subtotal * Decimal("0.10")
     total = subtotal
-
     first_prescription = prescriptions.first()
     prescribed_by = first_prescription.prescribed_by if first_prescription else None
-
     context = {
         'patient': patient,
         'prescriptions': prescriptions,
@@ -549,21 +543,33 @@ def patient_invoice_view_by_date(request, patient_id, date_str):
 @login_required
 def medicine_update(request, pk):
     medicine = get_object_or_404(Medicine, pk=pk)
-
+    # Agar foydalanuvchi admin bo'lmasa, ruxsatni cheklaymiz
+    if request.user.role not in ['admin', 'staff','doctor']:
+        messages.error(request, "Sizda dorini o‘zgartirish huquqi yo‘q.")
+        return redirect('listmedicine')
     if request.method == 'POST':
-        medicine.name = request.POST.get('name')
-        medicine.generic_name = request.POST.get('generic_name')
-        medicine.weight = request.POST.get('weight')
-        medicine.category = request.POST.get('category')
-        medicine.price = request.POST.get('price')
-        medicine.quantity = request.POST.get('quantity')
+        medicine.name = request.POST.get('name', medicine.name)
+        medicine.generic_name = request.POST.get('generic_name', medicine.generic_name)
+        medicine.weight = request.POST.get('weight', medicine.weight)
+        medicine.category = request.POST.get('category', medicine.category)
+        # Narx, box_quantity va quantity integer/decimal sifatida saqlaymiz
+        try:
+            medicine.price = float(request.POST.get('price', medicine.price))
+        except (ValueError, TypeError):
+            medicine.price = medicine.price
+        try:
+            medicine.box_quantity = int(request.POST.get('box_quantity', medicine.box_quantity))
+        except (ValueError, TypeError):
+            medicine.box_quantity = medicine.box_quantity
+        try:
+            medicine.quantity = int(request.POST.get('quantity', medicine.quantity))
+        except (ValueError, TypeError):
+            medicine.quantity = medicine.quantity
         expiry_date = request.POST.get('expiry_date')
-
         medicine.expiry_date = expiry_date if expiry_date else None
         medicine.save()
-
+        messages.success(request, f"{medicine.name} muvaffaqiyatli yangilandi.")
         return redirect('listmedicine')
-
     return render(request, 'medicine_edit.html', {
         'medicine': medicine,
         'categories': Medicine.CATEGORY_CHOICES

@@ -45,9 +45,6 @@
                                     <li class="nk-menu-item"><a href="{%url 'employee_list'%}"
                                             class="nk-menu-link"><span class="nk-menu-text">Hodimlar Ro'yxati</span></a>
                                     </li>
-                                    {% comment %} <li class="nk-menu-item"><a href="/demo7/pharmacy/customer-ledger.html"
-                                            class="nk-menu-link"><span class="nk-menu-text">Customer Ledger</span></a>
-                                    </li> {% endcomment %}
                                 </ul>
                             </li>{% endif %}
                             {% if user.role == 'staff' %}
@@ -69,7 +66,7 @@
                                     <li class="nk-menu-item"><a href="{%url 'listmedicine'%}"
                                             class="nk-menu-link"><span class="nk-menu-text">Dorilar Ro'yxati</span></a>
                                     </li>
-                                    {%if user.who != 'Hamshira'%}
+                                    {%if user.role == 'admin' or user.role == 'staff'%}
                                     <li class="nk-menu-item"><a href="{%url 'givemedicine'%}"
                                             class="nk-menu-link"><span class="nk-menu-text">Dori Chiqarish</span></a>
                                     </li>
@@ -86,7 +83,7 @@
                                     <li class="nk-menu-item"><a href="{%url 'list_patients'%}"
                                             class="nk-menu-link"><span class="nk-menu-text">Bemorlar Ro'yxati</span></a>
                                     </li>
-                                    {%if user.who == 'Hamshira'%}
+                                    {%if user.role == 'doctor'%}
                                     <li class="nk-menu-item"><a href="{%url 'give_medicine_to_patient'%}"
                                             class="nk-menu-link"><span class="nk-menu-text">Bemorga dori yozish</span></a>
                                     </li>
