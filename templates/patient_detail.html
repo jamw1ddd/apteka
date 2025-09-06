@@ -42,7 +42,8 @@
                     <div class="invoice">
                         <div class="invoice-action">
                             <a class="btn btn-icon btn-lg btn-white btn-dim btn-outline-primary" 
-                               href="#" target="_blank">
+                            href="javascript:void(0);" 
+                            onclick="window.print();">
                                 <em class="icon ni ni-printer-fill"></em>
                             </a>
                         </div>
@@ -125,4 +126,34 @@
         </div>
     </div>
 </div>
+<style>
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+    .invoice-wrap, .invoice-wrap * {
+        visibility: visible !important;
+    }
+    .invoice-wrap {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 10mm; /* chekni qog‘oz chetiga yaqinlashtirish */
+        box-sizing: border-box;
+    }
+
+    /* Printer tugmasi ko‘rinmasin */
+    .invoice-action {
+        display: none !important;
+    }
+
+    /* Chrome/Edge footer, header, URL, sahifa raqamini olib tashlash */
+    @page {
+        size: A4;
+        margin: 0;
+    }
+}
+</style>
+
 {% endblock %}

@@ -16,6 +16,7 @@
                                 <th>Nomi</th>
                                 <th>Kategoriya</th>
                                 <th>Miqdori</th>
+                                <th>Qutidagi miqdori</th>
                                 <th>Quti narxi</th>
                                 <th>1 dona narxi</th>
                                 <th>Muddati</th>
@@ -28,6 +29,7 @@
                                 <td>{{ med.name }}</td>
                                 <td>{{ med.get_category_display }}</td>
                                 <td>{{ med.remaining_display }}</td>
+                                <td>{{ med.box_quantity }} dona</td>
                                 <td>{{ med.price|floatformat:0 }} so'm</td>
                                 <td>
                                     {% if med.box_quantity > 1 %}

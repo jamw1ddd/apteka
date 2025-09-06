@@ -12,6 +12,7 @@ class Place(models.Model):
         verbose_name = "Joy"
         verbose_name_plural = "Joylar"
 
+
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -28,6 +29,7 @@ class CustomUser(AbstractUser):
     class Meta:
         verbose_name = "Foydalanuvchi"
         verbose_name_plural = "Foydalanuvchilar"
+
 
 class Medicine(models.Model):
     CATEGORY_CHOICES = [

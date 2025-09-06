@@ -44,8 +44,9 @@
                                         <div class="nk-tb-col"><span>Quti narxi</span></div>
                                         <div class="nk-tb-col"><span>1 dona narxi</span></div>
                                         <div class="nk-tb-col"><span>Miqdori</span></div>
+                                        <div class="nk-tb-col"><span>Qutidagi miqdori</span></div>
                                         <div class="nk-tb-col"><span>Amal muddati</span></div>
-                                        <div class="nk-tb-col text-end"><span>Harakatlar</span></div>
+                                        <div class="nk-tb-col text-end">{%if user.role != 'doctor'%}<span>Harakatlar</span>{%endif%}</div>
                                     </div>
                                     {% for med in medicines %}
                                     <div class="nk-tb-item">
@@ -64,12 +65,18 @@
                                             {{ med.remaining_display }}
                                         </div>
                                         <div class="nk-tb-col">
+                                            {{ med.box_quantity }} dona
+                                        </div>
+                                        <div class="nk-tb-col">
                                             {{ med.expiry_date|date:"d.m.Y"|default:"—" }}
                                         </div>
+                                        
                                         <div class="nk-tb-col text-end">
+                                            {%if user.role != 'doctor'%}
                                             <a href="{% url 'medicine_update' med.id %}" class="btn btn-sm btn-success">
                                                 <em class="icon ni ni-edit"></em> O‘zgartirish
                                             </a>
+                                            {%endif%}
                                         </div>
                                     </div>
                                     {% endfor %}

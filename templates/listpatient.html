@@ -58,12 +58,16 @@
                                                 <li>
                                                     <div class="drodown">
                                                         <a href="#" class="dropdown-toggle btn btn-icon btn-trigger" data-bs-toggle="dropdown">
-                                                            <em class="icon ni ni-more-h"></em>
+                                                            {% if user.role == 'admin' %}
+                                                                <em class="icon ni ni-more-h"></em>
+                                                            {%endif%}
                                                         </a>
                                                         <div class="dropdown-menu dropdown-menu-end">
                                                             <ul class="link-list-opt no-bdr">
                                                                 <!-- <li><a href="#"><em class="icon ni ni-edit"></em><span>O'zgartirish</span></a></li> -->
-                                                                <li><a href="{% url 'delete_patient' patient.pk %}"><em class="icon ni ni-trash"></em><span>O‘chirish</span></a></li>
+                                                                {% if user.role == 'admin' %}
+                                                                    <li><a href="{% url 'delete_patient' patient.pk %}"><em class="icon ni ni-trash"></em><span>O‘chirish</span></a></li>
+                                                                {% endif %}
                                                             </ul>
                                                         </div>
                                                     </div>

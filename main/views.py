@@ -164,14 +164,31 @@ def allplaces_medicine_list_view(request):
 
 @login_required
 def transfer_medicine_view(request):
-    places = Place.objects.all()
     user_role = request.user.role
-    if user_role not in ['admin', 'staff']:
-        messages.error(request, "Sizda dori chiqarishga ruxsat yo'q.")
-        return redirect('givemedicine')
+    if user_role == "admin":
+        # Admin umumiy skladdan (place=None) chiqaradi
+        source_medicines = Medicine.objects.filter(place__isnull=True)
+        destinations = Place.objects.all()  # Admin istalgan joyga chiqaradi
+
+    elif user_role == "staff":
+        # Staffning barcha joylari
+        user_places = request.user.place.all()
+
+        # Staff faqat skladdagi joylaridan dori chiqarishi mumkin
+        staff_sklads = user_places.filter(name__icontains="_sklad")
+        source_medicines = Medicine.objects.filter(place__in=staff_sklads)
+
+        # Joy tanlashda esa staffning boshqa joylari chiqadi (sklad emas)
+        destinations = user_places.exclude(name__icontains="_sklad")
+
+    else:
+        messages.error(request, "Sizda dori chiqarishga ruxsat yo‘q.")
+        return redirect('listmedicine')
+
     if request.method == 'POST':
         medicine_name = request.POST.get('name', '').strip()
-        sale_type = request.POST.get('sale_type')  # 'unit' yoki 'box'
+        sale_type = request.POST.get('sale_type')
+
         try:
             quantity = int(request.POST.get('quantity'))
             if quantity <= 0:
@@ -179,83 +196,82 @@ def transfer_medicine_view(request):
         except (ValueError, TypeError):
             messages.error(request, "Noto‘g‘ri miqdor kiritildi.")
             return redirect('givemedicine')
-        place_id = request.POST.get('place')
-        place = get_object_or_404(Place, id=place_id)
-        # Ombordagi dori (admin ombor = place is null)
-        admin_medicine = Medicine.objects.filter(
-            name__iexact=medicine_name,
-            place__isnull=True
+
+        dest_id = request.POST.get('place')
+        destination_place = get_object_or_404(Place, id=dest_id)
+
+        # Manbadan dorini topamiz
+        source_medicine = source_medicines.filter(
+            name__iexact=medicine_name
         ).first()
-        if not admin_medicine:
-            messages.error(request, f"{medicine_name} nomli dori topilmadi.")
+
+        if not source_medicine:
+            messages.error(request, f"{medicine_name} dorisi topilmadi.")
             return redirect('givemedicine')
-        # jami dona omborda
-        admin_total_units = admin_medicine.total_units
-        # qancha dona transfer qilinadi
-        if sale_type == 'box':
-            transfer_units = quantity * admin_medicine.box_quantity
-        elif sale_type == 'unit':
+
+        # Transferni hisoblaymiz
+        if sale_type == "box":
+            transfer_units = quantity * source_medicine.box_quantity
+        elif sale_type == "unit":
             transfer_units = quantity
         else:
-            messages.error(request, "Sotish turini tanlang (unit/box).")
             return redirect('givemedicine')
-        if admin_total_units < transfer_units:
-            messages.error(request, "Yetarli dori mavjud emas.")
+
+        if source_medicine.total_units < transfer_units:
             return redirect('givemedicine')
-        # atomik blok — hamma update yoki hech narsa
+
         with transaction.atomic():
-            # --- ombordan ayiramiz ---
-            new_admin_total = admin_total_units - transfer_units
-            admin_medicine.quantity = new_admin_total // admin_medicine.box_quantity
-            admin_medicine.extra_units = new_admin_total % admin_medicine.box_quantity
-            admin_medicine.save()
-            # --- manzildagi dori yangilanadi yoki yaratiladi ---
-            place_medicine = Medicine.objects.filter(
+            # Manbadan ayiramiz
+            new_src_total = source_medicine.total_units - transfer_units
+            source_medicine.quantity = new_src_total // source_medicine.box_quantity
+            source_medicine.extra_units = new_src_total % source_medicine.box_quantity
+            source_medicine.save()
+
+            # Qabul qiluvchiga qo‘shamiz
+            dest_medicine = Medicine.objects.filter(
                 name__iexact=medicine_name,
-                place=place,
-                owner=None
+                place=destination_place
             ).first()
-            if place_medicine:
-                new_place_total = place_medicine.total_units + transfer_units
-                place_medicine.quantity = new_place_total // place_medicine.box_quantity
-                place_medicine.extra_units = new_place_total % place_medicine.box_quantity
-                place_medicine.save()
+
+            if dest_medicine:
+                new_total = dest_medicine.total_units + transfer_units
+                dest_medicine.quantity = new_total // dest_medicine.box_quantity
+                dest_medicine.extra_units = new_total % dest_medicine.box_quantity
+                dest_medicine.save()
             else:
-                # yangi yozuvda ham quantity va extra_units to'g'ri saqlanadi
-                place_qty = transfer_units // admin_medicine.box_quantity
-                place_extra = transfer_units % admin_medicine.box_quantity
-                place_medicine = Medicine.objects.create(
-                    name=medicine_name,
-                    category=admin_medicine.category,
-                    generic_name=admin_medicine.generic_name,
-                    weight=admin_medicine.weight,
-                    price=admin_medicine.price,
-                    quantity=place_qty,
-                    extra_units=place_extra,
-                    box_quantity=admin_medicine.box_quantity,
-                    expiry_date=admin_medicine.expiry_date,
-                    place=place,
-                    owner=None,
+                dest_qty = transfer_units // source_medicine.box_quantity
+                dest_extra = transfer_units % source_medicine.box_quantity
+                Medicine.objects.create(
+                    name=source_medicine.name,
+                    category=source_medicine.category,
+                    generic_name=source_medicine.generic_name,
+                    weight=source_medicine.weight,
+                    price=source_medicine.price,
+                    quantity=dest_qty,
+                    extra_units=dest_extra,
+                    box_quantity=source_medicine.box_quantity,
+                    expiry_date=source_medicine.expiry_date,
+                    place=destination_place,
                 )
-            if sale_type == "box":
-                action_text = "quti ko'chirildi"
-            elif sale_type == "unit":
-                action_text = "dona ko'chirildi"
-            else:
-                action_text = "ko'chirildi"
+
             # Tarixga yozamiz
+            action_text = f"{quantity} {'quti' if sale_type == 'box' else 'dona'} ko‘chirildi"
             MedicineHistory.objects.create(
-                medicine=admin_medicine,
+                medicine=source_medicine,
                 user=request.user,
-                to_place=place,
-                quantity=transfer_units,   # saqlashni donalarda ham qilsak ma'qul
+                to_place=destination_place,
+                quantity=transfer_units,
                 action=action_text
             )
+        if user_role == "staff":
+            return redirect('employee')
         return redirect('listmedicine')
+
     return render(request, 'givemedicine.html', {
-        'places': places,
-        'medicines': Medicine.objects.filter(place__isnull=True)
+        'medicines': source_medicines,
+        'places': destinations,
     })
+
 
 @login_required
 def medicine_history_view(request):
@@ -306,9 +322,13 @@ def employee_list(request):
 def employeeview(request):
     user = request.user
     if user.role == "staff":
-        places = user.place.all()  # Foydalanuvchiga biriktirilgan barcha joylar
+        places = list(user.place.all())  # Queryset → list
     else:
-        places = Place.objects.all()  # Adminlar uchun barcha joylar
+        places = list(Place.objects.all())
+
+    # "Zulayho_sklad"ni birinchi qilish
+    places.sort(key=lambda p: (not p.name.endswith("_sklad"), p.name))
+
     # Har bir place uchun tegishli dorilarni yig'amiz
     place_medicines = []
     for place in places:
@@ -317,7 +337,10 @@ def employeeview(request):
             'place': place,
             'medicines': medicines
         })
-    return render(request, 'employee.html', {'place_medicines': place_medicines})
+
+    return render(request, 'employee.html', {
+        'place_medicines': place_medicines
+    })
 
 @login_required
 def add_patient(request):
